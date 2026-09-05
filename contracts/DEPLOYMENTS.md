@@ -165,3 +165,43 @@ finality before CCIP will commit. That is the number `disputeTimeout` has to cle
 Note on CCIP status codes as observed here: the skipped message sat at `state: 2`
 with a receipt but no receiver call, while the delivered one reported `state: 3`.
 Do not read 2 as success.
+
+## Release path — confirmed
+
+An honest purchase, taken through to payout.
+
+| Step | Evidence |
+| --- | --- |
+| x402 settlement | Hedera tx `0.0.7162784@1788626670.841803967` |
+| `bind` (60s window) | `0x7658fccf…0e07` |
+| Response | all 5 clauses held — buyer accepted, no dispute |
+| `release` | `0x7fbd0eb1…316a`, block 40146885 |
+| **Seller paid** | **+0.1 HBAR** to `0x70997970…79C8` (Hedera account `0.0.4426240`) |
+
+The uncontested path costs one contract call and never touches an oracle, which is
+the economic point: adjudication is the exception, and only the exception pays for it.
+
+Solvency checked live afterwards: balance 11,000,000 tinybar, `totalCommitted`
+11,000,000, `unboundBalance` 0 — exact, not merely non-negative. That remainder is a
+dispute still awaiting a verdict; `resolveStaleDispute` reclaims it after the timeout.
+
+## The freshness bug an honest purchase exposed
+
+The first honest run was **rejected**, on `freshness.maxAgeSec`.
+
+`evaluatedAt` was being set to `payment.deadline`, which is a *future* timestamp, so
+a quote generated a second earlier looked a full window old. Worse in the enclave:
+`dispute()` overwrites `deadline` with `now + disputeTimeout`, so the adjudicator
+would have seen every response as six hours stale and rejected all of them. Only the
+misbehaviour demos hid it, because they failed an earlier clause first.
+
+The fix removes the clock rather than finding a better one. `freshness.servedWithin`
+compares two fields *inside the signed body* — when the data was produced against
+when the seller served it — so it is deterministic, needs no external time, and
+cannot be skewed by how long a buyer waits before disputing.
+
+Residual assumption, stated plainly: a seller could misstate its own serving time.
+Nothing on-chain attests it. What keeps the clause useful is that the buyer compares
+`servedAt` against local time on receipt and stops paying a service whose clock it
+cannot trust. `freshness.maxAgeSec` is kept for deployments that do have an attested
+delivery time, with a comment saying so.
