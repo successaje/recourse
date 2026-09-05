@@ -23,23 +23,23 @@ function Hero() {
       <div className="gridlines pointer-events-none absolute inset-0 opacity-40" aria-hidden />
 
       <div className="relative mx-auto max-w-6xl px-6 pt-24 pb-20 sm:pt-32">
-        <Reveal>
+        <Reveal onMount>
           <p className="label">Escrow for machine payments</p>
         </Reveal>
 
-        <Reveal delay={0.06}>
+        <Reveal delay={0.06} onMount>
           <h1 className="mt-5 max-w-[16ch] text-[clamp(2.6rem,7vw,4.6rem)] leading-[1.02]">
             x402 pays before delivery.
           </h1>
         </Reveal>
 
-        <Reveal delay={0.12}>
+        <Reveal delay={0.12} onMount>
           <p className="text-brass mt-3 max-w-[20ch] font-display text-[clamp(1.5rem,3.6vw,2.2rem)] leading-tight">
             Recourse gets the money back.
           </p>
         </Reveal>
 
-        <Reveal delay={0.18}>
+        <Reveal delay={0.18} onMount>
           <p className="text-text-2 mt-8 max-w-[54ch] text-[17px] leading-relaxed">
             An agent pays for an API call, and the response is empty, stale, or quietly
             wrong. The money is already gone. Recourse holds the payment in escrow,
@@ -48,7 +48,7 @@ function Hero() {
           </p>
         </Reveal>
 
-        <Reveal delay={0.24}>
+        <Reveal delay={0.24} onMount>
           <div className="mt-9 flex flex-wrap items-center gap-3">
             <Link
               href="/protocol"
@@ -65,7 +65,7 @@ function Hero() {
           </div>
         </Reveal>
 
-        <Reveal delay={0.34}>
+        <Reveal delay={0.34} onMount>
           <div className="border-line bg-surface/40 mt-16 rounded-lg border p-6 sm:p-10">
             <FlowDiagram />
           </div>
