@@ -32,6 +32,7 @@ contract RecourseEscrowTest is Test {
     uint64 internal constant MAX_WINDOW = 7 days;
     uint64 internal constant CHALLENGE_GRACE = 1 hours;
     uint64 internal constant POST_PROOF = 30 minutes;
+    uint64 internal constant DISPUTE_TIMEOUT = 2 hours;
     uint16 internal constant BOND_BPS = 1_000; // 10%
 
     uint256 internal sellerPk = 0xA11CE;
@@ -49,7 +50,15 @@ contract RecourseEscrowTest is Test {
         seller = vm.addr(sellerPk);
         router = new MockRouter();
         escrow = new RecourseEscrow(
-            address(router), SEPOLIA, RELAY, MIN_WINDOW, MAX_WINDOW, CHALLENGE_GRACE, POST_PROOF, BOND_BPS
+            address(router),
+            SEPOLIA,
+            RELAY,
+            MIN_WINDOW,
+            MAX_WINDOW,
+            CHALLENGE_GRACE,
+            POST_PROOF,
+            DISPUTE_TIMEOUT,
+            BOND_BPS
         );
 
         vm.deal(buyer, 100 ether);
@@ -504,5 +513,99 @@ contract RecourseEscrowTest is Test {
             escrow.bind(PID, seller, requested, SLA_HASH, MIN_WINDOW);
             assertLe(escrow.totalCommitted(), address(escrow).balance);
         }
+    }
+
+    // ── stale dispute ────────────────────────────────────────────────
+
+    /// The one state that previously had no way out: a dispute nobody adjudicates.
+    function test_staleDispute_refundsBuyerWithBondAfterTimeout() public {
+        uint256 bond = _openDispute();
+        uint256 before = buyer.balance;
+
+        vm.warp(block.timestamp + DISPUTE_TIMEOUT + 1);
+        escrow.resolveStaleDispute(PID); // permissionless
+
+        assertEq(buyer.balance - before, AMOUNT + bond);
+        assertEq(escrow.totalCommitted(), 0);
+        assertEq(address(escrow).balance, 0);
+        assertEq(uint8(escrow.getPayment(PID).state), uint8(RecourseEscrow.State.Settled));
+    }
+
+    function test_staleDispute_revertsWhileVerdictStillDue() public {
+        _openDispute();
+        uint64 due = escrow.getPayment(PID).deadline;
+
+        vm.expectRevert(abi.encodeWithSelector(RecourseEscrow.VerdictPending.selector, due));
+        escrow.resolveStaleDispute(PID);
+    }
+
+    function test_staleDispute_rejectsUndisputedPayment() public {
+        _bound(PID, AMOUNT);
+        vm.warp(block.timestamp + DISPUTE_TIMEOUT + 1);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RecourseEscrow.WrongState.selector,
+                RecourseEscrow.State.Funded,
+                RecourseEscrow.State.Disputed
+            )
+        );
+        escrow.resolveStaleDispute(PID);
+    }
+
+    function test_staleDispute_cannotRunTwice() public {
+        _openDispute();
+        vm.warp(block.timestamp + DISPUTE_TIMEOUT + 1);
+        escrow.resolveStaleDispute(PID);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RecourseEscrow.WrongState.selector,
+                RecourseEscrow.State.Settled,
+                RecourseEscrow.State.Disputed
+            )
+        );
+        escrow.resolveStaleDispute(PID);
+    }
+
+    /// Opening a dispute must not shorten the wait by inheriting the old window.
+    function test_dispute_setsVerdictDeadlineNotDisputeWindow() public {
+        _bound(PID, AMOUNT);
+        uint256 bond = escrow.requiredBond(AMOUNT);
+        bytes memory sig = _sign(PID, RESP_HASH, sellerPk);
+
+        vm.prank(buyer);
+        escrow.dispute{value: bond}(PID, RESP_HASH, sig);
+
+        assertEq(escrow.getPayment(PID).deadline, uint64(block.timestamp) + DISPUTE_TIMEOUT);
+    }
+
+    /// A verdict that lands after the timeout still settles, as long as nobody
+    /// resolved the payment first.
+    function test_verdict_lateArrivalStillSettles() public {
+        uint256 bond = _openDispute();
+        uint256 before = seller.balance;
+
+        vm.warp(block.timestamp + DISPUTE_TIMEOUT + 1);
+        router.deliver(address(escrow), _verdict(PID, Verdict.Outcome.Approve, Verdict.REASON_OK));
+
+        assertEq(seller.balance - before, AMOUNT + bond);
+        assertEq(escrow.totalCommitted(), 0);
+    }
+
+    /// Once the buyer has been refunded, a straggling verdict cannot pay the seller too.
+    function test_verdict_cannotSettleAlreadyTimedOutDispute() public {
+        _openDispute();
+        vm.warp(block.timestamp + DISPUTE_TIMEOUT + 1);
+        escrow.resolveStaleDispute(PID);
+
+        vm.expectRevert(
+            abi.encodeWithSelector(
+                RecourseEscrow.WrongState.selector,
+                RecourseEscrow.State.Settled,
+                RecourseEscrow.State.Disputed
+            )
+        );
+        router.deliver(address(escrow), _verdict(PID, Verdict.Outcome.Approve, Verdict.REASON_OK));
     }
 }
