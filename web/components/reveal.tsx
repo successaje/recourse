@@ -1,53 +1,32 @@
-'use client';
-
-import { motion, useReducedMotion } from 'motion/react';
-
 /**
- * Entrance animation.
+ * Entrance fade.
  *
- * Two modes, and the distinction matters. Content above the fold animates on
- * mount; anything that waits on a scroll observer is invisible until that
- * observer fires, and it may never fire — a hidden tab, a prerendered
- * screenshot, an assistive tool that does not scroll. Hero copy that depends on
- * IntersectionObserver is a blank page in all of those cases.
+ * A plain element with a CSS class, and no client JavaScript at all — that is
+ * the fix, not an omission.
  *
- * Below the fold, `whileInView` is the right call and the risk does not apply,
- * because the reader has to scroll there to see it at all.
+ * The previous version hid content at `opacity: 0` and raised it once an
+ * IntersectionObserver fired. In a hidden or background tab that observer never
+ * fires, `requestAnimationFrame` is paused, and client effects may not run, so
+ * every revealed section stayed invisible indefinitely — including after the tab
+ * was fronted. Observed directly: 22 reveal wrappers, all stuck at zero, content
+ * present in the DOM and unreadable.
  *
- * The movement is deliberately small: 12px and a fade. Anything larger turns a
- * page of dense technical content into something that lurches while you read.
+ * The styling now animates *up to* a resting state that is already visible, so
+ * the failure mode is a missing fade rather than a missing page. See `.reveal`
+ * in globals.css.
+ *
+ * `delay` is accepted and ignored. Staggering requires holding elements at the
+ * from-state, which reintroduces exactly the problem this removes; callers pass
+ * it for readability and the uniform fade is the deliberate answer.
  */
 export function Reveal({
   children,
-  delay = 0,
-  onMount = false,
+  delay: _delay = 0,
+  onMount: _onMount = false,
 }: {
   children: React.ReactNode;
   delay?: number;
-  /** Animate immediately instead of waiting to be scrolled into view. */
   onMount?: boolean;
 }) {
-  const reduced = useReducedMotion();
-  if (reduced) return <>{children}</>;
-
-  const transition = { duration: 0.5, delay, ease: [0.22, 1, 0.36, 1] as const };
-
-  if (onMount) {
-    return (
-      <motion.div initial={{ opacity: 0, y: 12 }} animate={{ opacity: 1, y: 0 }} transition={transition}>
-        {children}
-      </motion.div>
-    );
-  }
-
-  return (
-    <motion.div
-      initial={{ opacity: 0, y: 12 }}
-      whileInView={{ opacity: 1, y: 0 }}
-      viewport={{ once: true, amount: 0.05 }}
-      transition={transition}
-    >
-      {children}
-    </motion.div>
-  );
+  return <div className="reveal">{children}</div>;
 }

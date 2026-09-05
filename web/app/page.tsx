@@ -1,5 +1,6 @@
 import Link from 'next/link';
 import { Demo } from '@/components/demo';
+import { Problem } from '@/components/problem';
 import { FlowDiagram } from '@/components/flow-diagram';
 import { Reveal } from '@/components/reveal';
 import { ESCROW, PROVEN_RUNS, RELAY } from '@/lib/constants';
@@ -78,39 +79,6 @@ function Hero() {
             <FlowDiagram />
           </div>
         </Reveal>
-      </div>
-    </section>
-  );
-}
-
-function Problem() {
-  return (
-    <section className="mx-auto max-w-6xl px-6 py-24">
-      <div className="rule mb-16" />
-      <div className="grid gap-12 lg:grid-cols-[minmax(0,0.9fr)_minmax(0,1.1fr)]">
-        <div>
-          <p className="label">The gap</p>
-          <h2 className="mt-4 text-[clamp(1.7rem,3vw,2.3rem)] leading-tight">
-            Settlement happens before the response exists
-          </h2>
-        </div>
-
-        <div className="text-text-2 space-y-5 text-[16px] leading-relaxed">
-          <p>
-            The x402 standard is a clean way for an agent to pay for an HTTP request:
-            hit an endpoint, get a <code className="mono text-brass text-[14px]">402</code>{' '}
-            with a price, sign a payment, retry. It works. It has one hole.
-          </p>
-          <p>
-            The money moves first. A seller that returns an empty object, a stale
-            quote, or a confidently wrong number keeps it.
-          </p>
-          <p className="text-text border-brass border-l-2 pl-5">
-            A human notices and stops buying. An agent making a thousand calls an hour
-            does not notice, has no refund path, and keeps paying until somebody reads
-            a log.
-          </p>
-        </div>
       </div>
     </section>
   );

@@ -133,3 +133,45 @@
     transition-duration: 0.001ms !important;
   }
 }
+
+@layer utilities {
+  /*
+   * Entrance fade.
+   *
+   * The resting state is VISIBLE and no JavaScript is involved, which is the
+   * whole point. A reveal that starts at opacity 0 and waits for JS to raise it
+   * is a permanently blank page whenever that JS does not run: in a hidden or
+   * background tab neither IntersectionObserver nor requestAnimationFrame fire,
+   * client effects may never execute, and the content stays at zero even after
+   * the tab is fronted. That was observed here, not theorised.
+   *
+   * So `animation-fill-mode` is left at `none` deliberately. The keyframes take
+   * the element from transparent up to its resting style; if the animation is
+   * throttled, never scheduled, or paused, the element simply renders at its
+   * resting style, which is visible. The worst case is a missing fade.
+   *
+   * The cost is that this runs on load rather than on scroll. Guaranteed
+   * legibility is worth more than a staggered entrance.
+   */
+  @keyframes reveal-in {
+    from {
+      opacity: 0;
+      transform: translateY(12px);
+    }
+    to {
+      opacity: 1;
+      transform: none;
+    }
+  }
+
+  .reveal {
+    opacity: 1;
+    animation: reveal-in 0.55s cubic-bezier(0.22, 1, 0.36, 1);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .reveal {
+    animation: none;
+  }
+}
