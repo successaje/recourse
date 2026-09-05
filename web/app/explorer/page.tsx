@@ -14,7 +14,7 @@ export default function ExplorerPage() {
       <h1 className="mt-4 text-[clamp(1.9rem,4vw,2.6rem)] leading-tight">Explorer</h1>
       <p className="text-text-2 mt-4 max-w-[62ch] text-[16px] leading-relaxed">
         Every payment the escrow has held, assembled from its own events. A row moves
-        from funded to settled as the protocol runs, and a rejected payment names the
+        from protected to released or refunded as the protocol runs, and a refunded payment names the
         clause that failed rather than reporting a bare error.
       </p>
 

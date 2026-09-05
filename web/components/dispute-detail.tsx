@@ -109,7 +109,16 @@ export function DisputeDetail({ paymentId }: { paymentId: string }) {
   const sellerGets = settled ? (buyerWon ? 0n : total) : null;
 
   const tone = !settled ? 'text-brass' : buyerWon ? 'text-refund' : 'text-release';
-  const heading = !settled ? 'Under adjudication' : buyerWon ? 'Rejected' : 'Upheld';
+
+  // Phrased from the claim's point of view, not the response's. The page is
+  // titled "Dispute", so a bare "Rejected" reads as "the dispute was rejected"
+  // — the exact opposite of what a buyer refund means. Naming the subject
+  // removes the ambiguity in the one place a reader cannot afford it.
+  const heading = !settled
+    ? 'Under adjudication'
+    : buyerWon
+      ? 'Claim upheld'
+      : 'Claim dismissed';
 
   return (
     <div className="mx-auto max-w-4xl px-6 pt-16 pb-8">

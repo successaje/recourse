@@ -1,15 +1,25 @@
 'use client';
 
+import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { PaymentRow } from '@/app/api/payments/route';
 import { describeReason } from '@/lib/constants';
 import { hbar, relativeTime, short } from '@/lib/format';
+import { moneyStateOf, StateBadge } from '@/components/money-state';
 
-const STATUS_STYLE: Record<PaymentRow['status'], string> = {
-  Funded: 'border-brass/40 text-brass',
-  Disputed: 'border-enclave/40 text-enclave',
-  Challenged: 'border-enclave/40 text-enclave',
-  Settled: 'border-line text-text-3',
+/**
+ * The contract's own enum is not shown here.
+ *
+ * On-chain a payment reads `Funded` or `Settled`, and `Settled` is the same
+ * word whether the seller was paid or the buyer refunded — which is precisely
+ * what a reader scanning this table needs to tell apart. Every surface uses the
+ * one payer-facing vocabulary instead; see components/money-state.tsx.
+ */
+const ON_CHAIN_STATE: Record<PaymentRow['status'], number> = {
+  Funded: 1,
+  Disputed: 2,
+  Challenged: 3,
+  Settled: 4,
 };
 
 export function ExplorerTable() {
@@ -96,12 +106,22 @@ export function ExplorerTable() {
               return (
                 <tr key={row.paymentId} className="border-line-soft hover:bg-surface/50 border-b transition-colors last:border-0">
                   <Td>
-                    <span className="mono text-text-2 text-[12.5px]">{short(row.paymentId, 8, 6)}</span>
+                    <Link
+                      href={`/payment/${row.paymentId}`}
+                      className="mono text-text-2 hover:text-brass text-[12.5px] transition-colors"
+                    >
+                      {short(row.paymentId, 8, 6)}
+                    </Link>
                   </Td>
                   <Td>
-                    <span className={`mono rounded border px-2 py-0.5 text-[11px] ${STATUS_STYLE[row.status]}`}>
-                      {row.status}
-                    </span>
+                    <StateBadge
+                      state={moneyStateOf({
+                        onChainState: ON_CHAIN_STATE[row.status] ?? 1,
+                        reasonCode: row.reasonCode,
+                        refundedToBuyer: refunded,
+                      })}
+                      size="sm"
+                    />
                   </Td>
                   <Td className="text-right">
                     <span className="mono text-text text-[13px]">
@@ -114,14 +134,14 @@ export function ExplorerTable() {
                     </span>
                   </Td>
                   <Td>
+                    {/* Only the reason. Repeating the state here would say the
+                        same thing twice in adjacent columns, and the reason is
+                        the part the state cannot carry. */}
                     {reason === null ? (
                       <span className="text-text-3 text-[13px]">pending</span>
                     ) : (
-                      <span className="flex items-baseline gap-2">
-                        <span className={`text-[13px] ${refunded ? 'text-refund' : 'text-release'}`}>
-                          {refunded ? 'Refunded' : 'Released'}
-                        </span>
-                        <span className="text-text-3 text-[12.5px]">{reason.label}</span>
+                      <span className={`text-[13px] ${reason.clause ? 'text-refund' : 'text-text-2'}`}>
+                        {reason.label}
                       </span>
                     )}
                   </Td>
