@@ -24,6 +24,10 @@ library Verdict {
     uint16 internal constant REASON_CONTENT_TYPE = 3;
     uint16 internal constant REASON_MISSING_FIELD = 4;
     uint16 internal constant REASON_LATENCY = 5;
+    /// @dev Never produced by the enclave. Recorded when a dispute settles because no
+    ///      verdict ever arrived, so settlement history distinguishes "the adjudicator
+    ///      ruled against the seller" from "the adjudicator never answered".
+    uint16 internal constant REASON_VERDICT_TIMEOUT = 6;
     uint16 internal constant ASSERTION_OFFSET = 100;
 
     /// @notice Encode a verdict for transport.

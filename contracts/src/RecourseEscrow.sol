@@ -42,7 +42,9 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
         uint256 bond;
         bytes32 slaHash;
         bytes32 responseHash;
-        uint64 deadline; // dispute window, or challenge grace while ReceiptChallenged
+        // Repurposed per state: the dispute window while Funded, the seller's grace
+        // while ReceiptChallenged, and the verdict deadline while Disputed.
+        uint64 deadline;
         bool wasChallenged; // one challenge round only, so the two cannot ping-pong
         State state;
     }
@@ -63,6 +65,7 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
     uint64 public immutable maxWindow;
     uint64 public immutable challengeGrace; // seller's time to prove delivery
     uint64 public immutable postProofWindow; // buyer's time to dispute after a proof
+    uint64 public immutable disputeTimeout; // how long a dispute waits for a verdict
     uint16 public immutable bondBps; // bond as a fraction of the amount
 
     uint16 private constant BPS = 10_000;
@@ -80,6 +83,7 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
     error UnknownSourceChain(uint64 received, uint64 expected);
     error UnknownSender(address received, address expected);
     error TransferFailed();
+    error VerdictPending(uint64 until);
 
     event Bound(
         bytes32 indexed paymentId,
@@ -100,6 +104,7 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
     event VerdictReceived(
         bytes32 indexed paymentId, Verdict.Outcome outcome, uint16 reasonCode, bytes32 ccipMessageId
     );
+    event DisputeTimedOut(bytes32 indexed paymentId, uint64 waitedUntil);
 
     constructor(
         address router,
@@ -109,10 +114,12 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
         uint64 _maxWindow,
         uint64 _challengeGrace,
         uint64 _postProofWindow,
+        uint64 _disputeTimeout,
         uint16 _bondBps
     ) CCIPReceiverBase(router) {
         require(_verdictRelay != address(0), "escrow: zero relay");
         require(_minWindow > 0 && _maxWindow >= _minWindow, "escrow: bad window bounds");
+        require(_disputeTimeout > 0, "escrow: zero dispute timeout");
         require(_bondBps <= BPS, "escrow: bond > 100%");
         sourceChainSelector = _sourceChainSelector;
         verdictRelay = _verdictRelay;
@@ -120,6 +127,7 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
         maxWindow = _maxWindow;
         challengeGrace = _challengeGrace;
         postProofWindow = _postProofWindow;
+        disputeTimeout = _disputeTimeout;
         bondBps = _bondBps;
     }
 
@@ -228,6 +236,8 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
         p.bond = msg.value;
         p.responseHash = responseHash;
         p.state = State.Disputed;
+        // From here the deadline means "verdict due by", not "may dispute until".
+        p.deadline = uint64(block.timestamp) + disputeTimeout;
         totalCommitted += msg.value;
 
         emit DisputeOpened(paymentId, p.slaHash, responseHash, msg.value);
@@ -284,6 +294,30 @@ contract RecourseEscrow is CCIPReceiverBase, ReentrancyGuard {
 
         _pay(p.buyer, amount);
         emit Settled(paymentId, p.buyer, amount, Verdict.REASON_RECEIPT_MISMATCH);
+    }
+
+    /// @notice Settle a dispute that no verdict ever came back for.
+    /// @dev Without this the amount and the bond sit here forever if the workflow is
+    ///      paused, the relay runs dry, or the CCIP lane stalls — the one state with no
+    ///      way out. Refunds the buyer, bond included: they posted it in good faith and
+    ///      the adjudicator, not the buyer, is what failed. That does mean a seller can
+    ///      lose a dispute it might have won, which is why the timeout should be set
+    ///      well beyond any plausible end-to-end verdict latency.
+    ///
+    ///      Permissionless, and a late verdict still wins if it lands first — whoever
+    ///      gets there first is resolving the same stuck payment either way.
+    function resolveStaleDispute(bytes32 paymentId) external nonReentrant {
+        Payment storage p = _get(paymentId);
+        if (p.state != State.Disputed) revert WrongState(p.state, State.Disputed);
+        if (block.timestamp <= p.deadline) revert VerdictPending(p.deadline);
+
+        uint256 total = p.amount + p.bond;
+        p.state = State.Settled;
+        totalCommitted -= total;
+
+        emit DisputeTimedOut(paymentId, p.deadline);
+        _pay(p.buyer, total);
+        emit Settled(paymentId, p.buyer, total, Verdict.REASON_VERDICT_TIMEOUT);
     }
 
     // ─────────────────────────────────────────────────────────────────
