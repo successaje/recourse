@@ -18,3 +18,8 @@ dist/
 # cre build artifacts
 **/.cre_build_tmp.js
 **/*.wasm
+
+# next
+web/.next/
+web/next-env.d.ts
+web/out/

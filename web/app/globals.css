@@ -1,0 +1,135 @@
+@import 'tailwindcss';
+
+/*
+ * Recourse design tokens.
+ *
+ * Dark-first, because the subject is instrumentation — a thing you watch state
+ * move through. Brass rather than the usual crypto neon: it reads as a measuring
+ * instrument instead of a trading terminal, and it keeps green and red free to
+ * mean exactly one thing each. A verdict is the only place colour is allowed to
+ * be loud.
+ */
+@theme {
+  --color-ink: #05070a;
+  --color-surface: #0b0f15;
+  --color-surface-2: #111721;
+  --color-surface-3: #18202c;
+  --color-line: #1f2836;
+  --color-line-soft: #161d27;
+
+  --color-text: #e8edf4;
+  --color-text-2: #a3b0c0;
+  --color-text-3: #6b7889;
+
+  /* Held funds, and the single accent. */
+  --color-brass: #c9973f;
+  --color-brass-dim: #8a6626;
+  --color-brass-glow: #f0c274;
+
+  /* Verdicts only. Never decoration. */
+  --color-release: #4ba883;
+  --color-refund: #d4695c;
+  /* The enclave boundary. */
+  --color-enclave: #7b8cf0;
+
+  --font-display: 'IBM Plex Serif', ui-serif, Georgia, serif;
+  --font-sans: 'IBM Plex Sans', ui-sans-serif, system-ui, sans-serif;
+  --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
+}
+
+@layer base {
+  :root {
+    color-scheme: dark;
+  }
+
+  html {
+    scroll-behavior: smooth;
+  }
+
+  body {
+    background: var(--color-ink);
+    color: var(--color-text);
+    font-family: var(--font-sans);
+    -webkit-font-smoothing: antialiased;
+    text-rendering: optimizeLegibility;
+  }
+
+  ::selection {
+    background: color-mix(in oklab, var(--color-brass) 30%, transparent);
+    color: var(--color-text);
+  }
+
+  :focus-visible {
+    outline: 2px solid var(--color-brass);
+    outline-offset: 3px;
+    border-radius: 2px;
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    font-weight: 600;
+    letter-spacing: -0.022em;
+    text-wrap: balance;
+  }
+
+  p {
+    text-wrap: pretty;
+  }
+}
+
+@layer utilities {
+  /* Uppercase micro-label. Used for section eyebrows and table headers. */
+  .label {
+    font-family: var(--font-mono);
+    font-size: 11px;
+    font-weight: 500;
+    letter-spacing: 0.14em;
+    text-transform: uppercase;
+    color: var(--color-text-3);
+  }
+
+  .mono {
+    font-family: var(--font-mono);
+    font-variant-numeric: tabular-nums;
+  }
+
+  /* Hairline that fades at both ends, so section breaks do not read as boxes. */
+  .rule {
+    height: 1px;
+    background: linear-gradient(
+      to right,
+      transparent,
+      var(--color-line) 15%,
+      var(--color-line) 85%,
+      transparent
+    );
+  }
+
+  .grain {
+    position: relative;
+  }
+
+  /* A faint vertical grid, like ledger paper under the content. */
+  .gridlines {
+    background-image:
+      linear-gradient(to right, var(--color-line-soft) 1px, transparent 1px);
+    background-size: 96px 100%;
+    mask-image: linear-gradient(to bottom, transparent, black 12%, black 88%, transparent);
+  }
+}
+
+@media (prefers-reduced-motion: reduce) {
+  html {
+    scroll-behavior: auto;
+  }
+
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.001ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.001ms !important;
+  }
+}
