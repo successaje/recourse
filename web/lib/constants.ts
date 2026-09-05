@@ -41,12 +41,35 @@ export const ASSERTION_OFFSET = 100;
  * Codes at or above the offset are a failed clause, and the index is the part
  * that matters — it points at a specific published promise.
  */
-export function describeReason(code: number): { label: string; clause?: number } {
+/**
+ * Plain-language readings of the structural reason codes.
+ *
+ * These describe failures that happen *before* any clause is reached, so a
+ * person is not left inferring what "reason 2" meant. Clause failures need no
+ * entry here — the SLA document says what they promised.
+ */
+const REASON_DETAIL: Record<number, string> = {
+  0: 'Every clause held, so there was nothing to decide against the seller.',
+  1: 'The body supplied did not hash to the receipt the seller signed, so the evidence was rejected before its merit was considered.',
+  2: 'The response was not parseable, so no clause could be evaluated against it.',
+  3: 'The response arrived with the wrong content type.',
+  4: 'The response was missing a field the SLA required.',
+  5: 'The response took longer than the SLA allowed.',
+  6: 'No verdict arrived before the timeout, so the payment was returned to the buyer by default.',
+  7: 'The SLA presented did not match the commitment bound on-chain.',
+  8: 'The SLA used an operator the adjudicator does not implement, so it could not be enforced deterministically.',
+};
+
+export function describeReason(code: number): { label: string; clause?: number; detail?: string } {
   if (code >= ASSERTION_OFFSET) {
     const clause = code - ASSERTION_OFFSET;
-    return { label: `Clause ${clause} failed`, clause };
+    return {
+      label: `Clause ${clause} failed`,
+      clause,
+      detail: `The response broke clause ${clause} of the SLA both parties agreed to before payment.`,
+    };
   }
-  return { label: REASONS[code] ?? `Reason ${code}` };
+  return { label: REASONS[code] ?? `Reason ${code}`, detail: REASON_DETAIL[code] };
 }
 
 /** The runs recorded in DEPLOYMENTS.md, shown as verifiable evidence. */
