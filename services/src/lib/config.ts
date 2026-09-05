@@ -5,7 +5,7 @@
  */
 
 /** RecourseEscrow on Hedera testnet, as an EVM address. */
-export const ESCROW_EVM_ADDRESS = '0xfDEC4B5BD29CA4e939A0CE22525B136e4641dDF1' as const;
+export const ESCROW_EVM_ADDRESS = '0x7E7A73e5bE1F45D9B3033C2a96087B62855e00bB' as const;
 
 /**
  * The same contract as a Hedera account id.
@@ -13,7 +13,7 @@ export const ESCROW_EVM_ADDRESS = '0xfDEC4B5BD29CA4e939A0CE22525B136e4641dDF1' a
  * x402 settlement on Hedera addresses accounts this way, not by EVM address, so
  * this is what goes in `payTo`.
  */
-export const ESCROW_ACCOUNT_ID = '0.0.10378308' as const;
+export const ESCROW_ACCOUNT_ID = '0.0.10380390' as const;
 
 /** Hedera testnet EVM chain id, used in the receipt digest's domain separator. */
 export const HEDERA_CHAIN_ID = 296;

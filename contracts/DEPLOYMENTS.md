@@ -120,3 +120,48 @@ Hedera's JSON-RPC relay trails consensus, so the buyer waits three times: for th
 deposit to be visible before `bind`, for the bound state before the seller will
 serve, and for the dispute receipt so the adjudicator pins its read to the block
 the dispute actually landed in.
+
+## The ERC165 bug that ate the first verdict
+
+The first end-to-end run reached Hedera and did nothing. CCIP reported the message
+delivered, the OffRamp transaction succeeded, and the escrow never moved.
+
+Cause: `CCIPReceiverBase` did not implement `supportsInterface`. Before delivering,
+the CCIP router staticcalls `supportsInterface(0x85572ffb)` on the receiver; an
+address that reverts is treated as an ordinary account, so the router **skips the
+receiver call and still records the message as executed**. Nothing anywhere reports
+a failure — the verdict is simply gone.
+
+It was introduced by trimming Chainlink's `CCIPReceiver` down to "the parts we use".
+`supportsInterface` looks like ceremony and is load-bearing.
+
+Fixed in `CCIPReceiverBase`, with two tests pinning it: the escrow must answer true
+for `IAny2EVMMessageReceiver`, and the constant must stay `0x85572ffb`.
+
+### Redeployment
+
+| Contract | Address | Note |
+| --- | --- | --- |
+| `RecourseEscrow` (v2) | `0x7E7A73e5bE1F45D9B3033C2a96087B62855e00bB` | contract id `0.0.10380390` |
+| `RecourseEscrow` (v1) | `0xfDEC4B5BD29CA4e939A0CE22525B136e4641dDF1` | superseded — invisible to the router |
+
+## Second end-to-end run — settlement confirmed
+
+| Step | Evidence |
+| --- | --- |
+| x402 settlement | Hedera tx `0.0.7162784@1788624601.728920938` |
+| `bind` | `0xf319ce9e…7f2d` |
+| `dispute` | payment `0xc79c411d…0991`, bond 1e6 tinybar, block 40145882 |
+| Enclave verdict | `REJECT reason=102` |
+| Report on Sepolia | `0x98d8c5584c793b0b76643c5233995b2e09fc04def6cda68b6a7b31440af72ec7` |
+| CCIP message | `0xa4fb4823…db84`, fee 224,220,977,260,679 wei |
+| Settled on Hedera | state 4, `totalCommitted` 0, escrow drained |
+| **Buyer refunded** | **+0.11 HBAR — the 0.1 payment plus the 0.01 bond** |
+
+Elapsed from verdict to refund: roughly 18 minutes, nearly all of it Sepolia
+finality before CCIP will commit. That is the number `disputeTimeout` has to clear;
+6 hours is comfortable.
+
+Note on CCIP status codes as observed here: the skipped message sat at `state: 2`
+with a receipt but no receiver call, while the delivered one reported `state: 3`.
+Do not read 2 as success.
