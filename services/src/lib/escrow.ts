@@ -97,6 +97,13 @@ export const ESCROW_ABI = [
   },
   {
     type: 'function',
+    name: 'release',
+    stateMutability: 'nonpayable',
+    inputs: [{ name: 'paymentId', type: 'bytes32' }],
+    outputs: [],
+  },
+  {
+    type: 'function',
     name: 'challengeReceipt',
     stateMutability: 'nonpayable',
     inputs: [{ name: 'paymentId', type: 'bytes32' }],
@@ -202,6 +209,22 @@ export async function dispute(
     args: [args.paymentId, args.responseHash, args.sellerSig],
     // `bond` comes from `requiredBond()` and is therefore in tinybars.
     value: args.bond * WEIBARS_PER_TINYBAR,
+  });
+}
+
+/**
+ * Pay the seller once the dispute window has lapsed untouched.
+ *
+ * Permissionless: the funds can only go to the seller named at `bind`, so there
+ * is nothing to gain by being the one who calls it.
+ */
+export async function release(privateKey: Hex, paymentId: Hex) {
+  const wallet = walletFor(privateKey);
+  return wallet.writeContract({
+    address: ESCROW_EVM_ADDRESS,
+    abi: ESCROW_ABI,
+    functionName: 'release',
+    args: [paymentId],
   });
 }
 

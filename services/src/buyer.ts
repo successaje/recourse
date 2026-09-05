@@ -258,6 +258,7 @@ if (import.meta.main) {
   }
 
   const misbehave = process.argv[2];
+  const windowSeconds = BigInt(process.env['WINDOW_SECONDS'] ?? '300');
   console.log(`buying a quote${misbehave ? ` (forcing "${misbehave}")` : ''}`);
 
   const result = await buy({
@@ -265,6 +266,7 @@ if (import.meta.main) {
     indexUrl: process.env['INDEX_URL'] ?? config.indexBaseUrl,
     buyerKey,
     hederaAccountId: accountId,
+    windowSeconds,
     ...(misbehave ? { misbehave } : {}),
   });
 

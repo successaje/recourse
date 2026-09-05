@@ -37,13 +37,19 @@ const SLA: SlaDocument = {
   latency: { maxMs: 2000 },
   response: {
     contentType: 'application/json',
-    required: ['pair', 'bid', 'ask', 'asOf'],
+    required: ['pair', 'bid', 'ask', 'asOf', 'servedAt'],
     assertions: [
       { op: 'string.matches', path: '$.pair', value: '[A-Z]+-[A-Z]+', note: 'well-formed pair' },
       { op: 'numeric.gt', path: '$.bid', value: 0, note: 'bid is positive' },
       { op: 'numeric.gt', path: '$.ask', value: 0, note: 'ask is positive' },
       { op: 'numeric.lte', path: '$.spreadBps', value: 50, note: 'spread within 50bps' },
-      { op: 'freshness.maxAgeSec', path: '$.asOf', value: 30, note: 'quote at most 30s old' },
+      {
+        op: 'freshness.servedWithin',
+        path: '$.asOf',
+        otherPath: '$.servedAt',
+        value: 30,
+        note: 'quote at most 30s old when served',
+      },
     ],
   },
 };
@@ -61,7 +67,9 @@ type Misbehaviour = 'stale' | 'spread' | 'negative' | 'malformed' | 'missing' | 
  * so a demo can point at the reason code and show which promise was broken.
  */
 function quoteBody(pair: string, misbehave: Misbehaviour | undefined, now: number): string {
-  const base = { pair, bid: 0.0521, ask: 0.0524, spreadBps: 6, asOf: now };
+  // `servedAt` is what makes freshness checkable without any clock: both ends of
+  // the comparison sit inside the body the seller signs.
+  const base = { pair, bid: 0.0521, ask: 0.0524, spreadBps: 6, asOf: now, servedAt: now };
 
   switch (misbehave) {
     case 'stale':
