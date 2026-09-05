@@ -3,7 +3,7 @@ pragma solidity 0.8.24;
 
 import {Test} from "forge-std/Test.sol";
 import {RecourseEscrow} from "../src/RecourseEscrow.sol";
-import {Client, IAny2EVMMessageReceiver} from "../src/vendor/CCIP.sol";
+import {Client, IAny2EVMMessageReceiver, IERC165} from "../src/vendor/CCIP.sol";
 import {Verdict} from "../src/lib/Verdict.sol";
 
 /// @dev Stands in for the CCIP router: the only address the escrow will take a
@@ -607,5 +607,24 @@ contract RecourseEscrowTest is Test {
             )
         );
         router.deliver(address(escrow), _verdict(PID, Verdict.Outcome.Approve, Verdict.REASON_OK));
+    }
+
+    // ── router discoverability ───────────────────────────────────────
+
+    /// The CCIP router staticcalls this before delivering. An address that
+    /// reverts is treated as a plain account: the delivery is skipped and the
+    /// message is still marked executed, so the verdict vanishes with nothing
+    /// reporting a failure. A live deployment lost a verdict exactly this way.
+    function test_supportsInterface_answersForCcipReceiver() public view {
+        assertTrue(escrow.supportsInterface(type(IAny2EVMMessageReceiver).interfaceId));
+        assertTrue(escrow.supportsInterface(type(IERC165).interfaceId));
+        assertFalse(escrow.supportsInterface(0xdeadbeef));
+    }
+
+    /// Pins the constant the router actually uses, so a signature change to
+    /// `ccipReceive` cannot quietly make the escrow undeliverable again.
+    function test_supportsInterface_matchesTheRouterConstant() public view {
+        assertEq(type(IAny2EVMMessageReceiver).interfaceId, bytes4(0x85572ffb));
+        assertTrue(escrow.supportsInterface(0x85572ffb));
     }
 }

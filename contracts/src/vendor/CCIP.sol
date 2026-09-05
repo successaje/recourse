@@ -62,12 +62,23 @@ interface IAny2EVMMessageReceiver {
     function ccipReceive(Client.Any2EVMMessage calldata message) external;
 }
 
+interface IERC165 {
+    function supportsInterface(bytes4 interfaceId) external view returns (bool);
+}
+
 /// @title CCIPReceiverBase
 /// @notice Accepts messages from the local CCIP router only.
 /// @dev Sender authentication (which contract on which chain) is deliberately
 ///      left to the subclass — the router proves the message crossed CCIP, not
 ///      that it came from someone we trust.
-abstract contract CCIPReceiverBase is IAny2EVMMessageReceiver {
+///
+///      `supportsInterface` is not optional. Before delivering, the CCIP router
+///      staticcalls it to decide whether the receiver is a CCIP receiver at all;
+///      an address that reverts is treated as a plain account, the delivery is
+///      skipped, and the message is still recorded as executed successfully. The
+///      message is then gone, with nothing anywhere reporting a failure. An
+///      earlier deployment omitted this and lost a verdict exactly that way.
+abstract contract CCIPReceiverBase is IAny2EVMMessageReceiver, IERC165 {
     address internal immutable i_ccipRouter;
 
     error InvalidRouter(address caller, address expected);
@@ -92,4 +103,12 @@ abstract contract CCIPReceiverBase is IAny2EVMMessageReceiver {
     }
 
     function _ccipReceive(Client.Any2EVMMessage memory message) internal virtual;
+
+    /// @inheritdoc IERC165
+    /// @dev Must answer true for `IAny2EVMMessageReceiver` or the router will
+    ///      never call this contract.
+    function supportsInterface(bytes4 interfaceId) public pure virtual override returns (bool) {
+        return interfaceId == type(IAny2EVMMessageReceiver).interfaceId
+            || interfaceId == type(IERC165).interfaceId;
+    }
 }
