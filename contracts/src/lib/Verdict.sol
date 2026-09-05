@@ -28,6 +28,10 @@ library Verdict {
     ///      verdict ever arrived, so settlement history distinguishes "the adjudicator
     ///      ruled against the seller" from "the adjudicator never answered".
     uint16 internal constant REASON_VERDICT_TIMEOUT = 6;
+    /// @dev The SLA presented to the enclave did not match the hash committed by `bind`.
+    uint16 internal constant REASON_SLA_MISMATCH = 7;
+    /// @dev The agreed SLA contains a clause the adjudicator cannot evaluate.
+    uint16 internal constant REASON_UNKNOWN_OPERATOR = 8;
     uint16 internal constant ASSERTION_OFFSET = 100;
 
     /// @notice Encode a verdict for transport.
