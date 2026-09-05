@@ -10,7 +10,8 @@
   "dependencies": {
     "@chainlink/cre-sdk": "1.18.0",
     "viem": "2.34.0",
-    "zod": "3.25.76"
+    "zod": "3.25.76",
+    "@recourse/sla": "file:../../sla"
   },
   "devDependencies": {
     "typescript": "5.9.3"

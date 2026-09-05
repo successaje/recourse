@@ -1,6 +1,9 @@
 {
   "schedule": "0 */1 * * * *",
-  "url": "https://postman-echo.com/headers",
-  "secretId": "API_TOKEN",
-  "scoreThreshold": 500
+  "disputeQueueUrl": "https://raw.githubusercontent.com/successaje/recourse-fixtures/main/queue.json",
+  "escrowRpcUrl": "https://testnet.hashio.io/api",
+  "escrowAddress": "0x0000000000000000000000000000000000000000",
+  "relayAddress": "0x005F2e3AB6C085A5240EAC5d8605D92Ba133F9DF",
+  "relayChainName": "ethereum-testnet-sepolia",
+  "relayGasLimit": "600000"
 }
