@@ -88,3 +88,6 @@ export const PROVEN_RUNS = {
     paidHbar: '0.1',
   },
 } as const;
+
+/** The buyer agent used in the recorded runs, shown when no address is given. */
+export const DEMO_BUYER = '0xC282Cb7cE6c175582B84BF94C61258Bb5cDCA88e';

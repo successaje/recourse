@@ -8,6 +8,7 @@ const LINKS = [
   { href: '/protocol', label: 'Protocol' },
   { href: '/explorer', label: 'Explorer' },
   { href: '/services', label: 'Services' },
+  { href: '/agent', label: 'Agent' },
   { href: '/build', label: 'Build' },
 ] as const;
 
