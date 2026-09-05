@@ -77,14 +77,20 @@ type Config = z.infer<typeof configSchema>
  * re-read from chain and the evidence is checked against the seller's signature
  * before any of it is judged.
  */
+// Not `z.string().url()`: that validator calls the `URL` constructor, which the
+// WASM runtime does not provide, so every URL fails validation inside the enclave.
+// A scheme check is all this needs — the request either resolves or it does not,
+// and a bad host surfaces as a fetch failure rather than a silent wrong answer.
+const httpUrl = z.string().regex(/^https?:\/\/[^\s]+$/, 'must be an http(s) URL')
+
 const disputeSchema = z.object({
 	paymentId: z.string().regex(/^0x[0-9a-fA-F]{64}$/),
 	/** Block at which to read escrow state. Pinning it keeps the read reproducible. */
 	blockNumber: z.number().int().nonnegative(),
 	/** Returns `{ body, contentType, latencyMs }` — what the seller actually sent. */
-	evidenceUrl: z.string().url(),
+	evidenceUrl: httpUrl,
 	/** Returns the SLA document whose hash the payment was bound to. */
-	slaUrl: z.string().url(),
+	slaUrl: httpUrl,
 })
 
 const queueSchema = z.array(disputeSchema)

@@ -1,8 +1,8 @@
 {
   "schedule": "0 */1 * * * *",
-  "disputeQueueUrl": "https://raw.githubusercontent.com/successaje/recourse-fixtures/main/queue.json",
+  "disputeQueueUrl": "http://localhost:8403/queue",
   "escrowRpcUrl": "https://testnet.hashio.io/api",
-  "escrowAddress": "0x0000000000000000000000000000000000000000",
+  "escrowAddress": "0xfDEC4B5BD29CA4e939A0CE22525B136e4641dDF1",
   "relayAddress": "0x005F2e3AB6C085A5240EAC5d8605D92Ba133F9DF",
   "relayChainName": "ethereum-testnet-sepolia",
   "relayGasLimit": "600000"
