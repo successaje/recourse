@@ -18,10 +18,12 @@
 import { canonicalHash, type SlaDocument } from '@recourse/sla';
 import { Hono } from 'hono';
 import { keccak256, toBytes, type Hex } from 'viem';
+import { privateKeyToAccount } from 'viem/accounts';
 
 import { config, ESCROW_ACCOUNT_ID, X402_VERSION } from './lib/config.js';
+import { readPayment, PaymentState } from './lib/escrow.js';
 import { signReceipt } from './lib/receipt.js';
-import { decodePaymentHeader, paymentRequirements, settle, verify } from './lib/x402.js';
+import { paymentRequirements } from './lib/x402.js';
 
 // ─── The service's published terms ──────────────────────────────────
 
@@ -87,6 +89,11 @@ function quoteBody(pair: string, misbehave: Misbehaviour | undefined, now: numbe
  * Derived from a nonce rather than the request, so two identical requests are
  * still two distinct payments.
  */
+function sellerAddress(): string {
+	if (config.sellerPrivateKey === undefined) throw new Error('SELLER_PRIVATE_KEY not set');
+	return privateKeyToAccount(config.sellerPrivateKey as Hex).address;
+}
+
 function newPaymentId(): Hex {
   return keccak256(toBytes(`${Date.now()}:${crypto.randomUUID()}`));
 }
@@ -96,6 +103,9 @@ function newPaymentId(): Hex {
 export const seller = new Hono();
 
 seller.get('/sla', (c) => c.json({ slaHash: SLA_HASH, sla: SLA }));
+
+/** Who the escrow should name as seller, and whose signature signs receipts. */
+seller.get('/identity', (c) => c.json({ address: sellerAddress(), price: PRICE, slaHash: SLA_HASH }));
 
 seller.get('/quote', async (c) => {
   const pair = c.req.query('pair') ?? 'HBAR-USD';
@@ -129,26 +139,35 @@ seller.get('/quote', async (c) => {
     return c.json({ error: 'X-PAYMENT-ID header required alongside X-PAYMENT' }, 400);
   }
 
-  // ── Paid: verify, settle, then serve ──
-  let payload: unknown;
-  try {
-    payload = decodePaymentHeader(header);
-  } catch {
-    return c.json({ error: 'X-PAYMENT is not valid base64 JSON' }, 400);
+  // ── Paid: check the escrow before doing any work ──
+  // The seller settles nothing itself. The buyer settles through the facilitator
+  // and binds the deposit on-chain; this only serves once it can see its own
+  // terms committed. Checking the SLA hash matters as much as the amount — a
+  // deposit bound to some other SLA is not a promise this service made.
+  const payment = await readPayment(paymentId);
+
+  if (payment.state !== PaymentState.Funded) {
+    return c.json(
+      { error: 'payment is not bound in escrow', paymentId, state: payment.state },
+      402,
+    );
+  }
+  if (payment.slaHash.toLowerCase() !== SLA_HASH.toLowerCase()) {
+    return c.json(
+      { error: 'bound to a different SLA', expected: SLA_HASH, bound: payment.slaHash },
+      409,
+    );
+  }
+  if (payment.amount < BigInt(PRICE)) {
+    return c.json(
+      { error: 'bound amount is below the price', price: PRICE, bound: String(payment.amount) },
+      402,
+    );
+  }
+  if (payment.seller.toLowerCase() !== sellerAddress().toLowerCase()) {
+    return c.json({ error: 'bound to a different seller', bound: payment.seller }, 409);
   }
 
-  const verified = await verify(payload, requirements);
-  if (!verified.ok) {
-    return c.json({ error: 'payment verification failed', detail: verified.body }, 402);
-  }
-
-  const settled = await settle(payload, requirements);
-  if (!settled.ok) {
-    return c.json({ error: 'settlement failed', detail: settled.body }, 402);
-  }
-
-  // Only now is the response produced. Settlement happening first is precisely
-  // the gap Recourse exists to close.
   const started = Date.now();
   const body = quoteBody(pair, misbehave, Math.floor(Date.now() / 1000));
   const latencyMs = Date.now() - started;
@@ -163,7 +182,6 @@ seller.get('/quote', async (c) => {
     status: 200,
     headers: {
       'Content-Type': 'application/json',
-      'X-Payment-Response': JSON.stringify(settled.body),
       // The receipt. Without these three the buyer cannot dispute, and the
       // escrow will refund it once the window closes.
       'X-Recourse-Payment-Id': paymentId,
