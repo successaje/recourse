@@ -20,7 +20,8 @@ export type OperatorName =
   | 'string.matches'
   | 'string.minLength'
   | 'array.minLength'
-  | 'freshness.maxAgeSec';
+  | 'freshness.maxAgeSec'
+  | 'freshness.servedWithin';
 
 export interface Assertion {
   /** Which check to run. */
@@ -33,6 +34,11 @@ export interface Assertion {
    * time (see operators.ts) so a pathological pattern cannot stall the enclave.
    */
   value?: string | number;
+  /**
+   * Second path, for operators that compare two fields of the same response.
+   * `freshness.servedWithin` reads the delivery time from here.
+   */
+  otherPath?: string;
   /** Optional human-readable note. Carried in the SLA hash, ignored by the evaluator. */
   note?: string;
 }
@@ -71,11 +77,18 @@ export interface EvidenceBundle {
   /** Observed round-trip in milliseconds, as recorded by the buyer. */
   latencyMs: number;
   /**
-   * Reference instant for freshness checks, in seconds.
+   * Reference instant for `freshness.maxAgeSec`, in seconds.
    *
-   * Passed in rather than read from the clock: `Date.now()` inside the enclave
-   * would make the verdict non-deterministic and break consensus. The escrow
-   * supplies the block timestamp at which the dispute was opened.
+   * Passed in rather than read from the clock, because `Date.now()` inside the
+   * enclave would make the verdict non-deterministic and break consensus.
+   *
+   * Supplying a *sound* value is harder than it looks: the escrow has no field
+   * that means "when the response was delivered". Using a deadline is wrong —
+   * it lies in the future, so it inflates the apparent age of the response by
+   * the whole window, and after `dispute()` rewrites it the gap becomes the
+   * verdict timeout. Prefer `freshness.servedWithin`, which needs no external
+   * clock at all; reach for this operator only where a genuinely attested
+   * timestamp exists.
    */
   evaluatedAt: number;
 }

@@ -14,7 +14,15 @@ const SLA = quoteV1 as SlaDocument;
 const NOW = 1_788_600_000;
 
 function goodBody(overrides: Record<string, unknown> = {}) {
-  return JSON.stringify({ pair: 'HBAR-USD', bid: 0.052, ask: 0.0523, spreadBps: 6, asOf: NOW - 5, ...overrides });
+  return JSON.stringify({
+    pair: 'HBAR-USD',
+    bid: 0.052,
+    ask: 0.0523,
+    spreadBps: 6,
+    asOf: NOW - 5,
+    servedAt: NOW,
+    ...overrides,
+  });
 }
 
 function evidence(body: string, overrides: Partial<EvidenceBundle> = {}): EvidenceBundle {
@@ -56,6 +64,29 @@ describe('operators', () => {
     expect(evaluateAssertion(NOW - 10, assertion, NOW)).toBe(true);
     expect(evaluateAssertion(NOW - 31, assertion, NOW)).toBe(false);
     expect(evaluateAssertion(NOW + 5, assertion, NOW)).toBe(false);
+  });
+
+  test('servedWithin measures the response against itself, with no clock', () => {
+    const assertion = {
+      op: 'freshness.servedWithin',
+      path: '$.asOf',
+      otherPath: '$.servedAt',
+      value: 30,
+    } as const;
+    const root = { asOf: 1000, servedAt: 1020 };
+
+    // The evaluatedAt argument is deliberately absurd: it must not matter.
+    expect(evaluateAssertion(root.asOf, assertion, 999_999_999, root)).toBe(true);
+    expect(evaluateAssertion(1000, assertion, 0, { asOf: 1000, servedAt: 1100 })).toBe(false);
+    // Served before produced is a broken clock, not freshness.
+    expect(evaluateAssertion(1000, assertion, 0, { asOf: 1000, servedAt: 900 })).toBe(false);
+  });
+
+  test('the old maxAgeSec operator is the one that needs a trusted clock', () => {
+    const assertion = { op: 'freshness.maxAgeSec', path: '$.asOf', value: 30 } as const;
+    // A future evaluatedAt — exactly what a deadline is — fails a fresh quote.
+    expect(evaluateAssertion(NOW, assertion, NOW + 300)).toBe(false);
+    expect(evaluateAssertion(NOW, assertion, NOW + 10)).toBe(true);
   });
 
   test('a malformed clause raises rather than silently failing', () => {
@@ -111,7 +142,7 @@ describe('adjudicate', () => {
   });
 
   test('missing required field is reported as such, not as a clause failure', () => {
-    const body = JSON.stringify({ pair: 'HBAR-USD', bid: 1, ask: 2, spreadBps: 1 });
+    const body = JSON.stringify({ pair: 'HBAR-USD', bid: 1, ask: 2, spreadBps: 1, servedAt: NOW });
     expect(adjudicate(SLA, evidence(body)).reasonCode).toBe(Reason.MISSING_REQUIRED_FIELD);
   });
 

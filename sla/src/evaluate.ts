@@ -91,7 +91,7 @@ export function adjudicate(sla: SlaDocument, evidence: EvidenceBundle): Judgemen
 
     let held: boolean;
     try {
-      held = evaluateAssertion(readPath(root, assertion.path), assertion, evidence.evaluatedAt);
+      held = evaluateAssertion(readPath(root, assertion.path), assertion, evidence.evaluatedAt, root);
     } catch (error) {
       // A malformed clause is the SLA's fault, not the seller's delivery. Both
       // parties signed off on this document, so neither side gets to benefit

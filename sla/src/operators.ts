@@ -7,6 +7,7 @@
  * as an unexplained consensus failure rather than a clean rejection.
  */
 
+import { readPath } from './path.js';
 import type { Assertion, OperatorName } from './types.js';
 
 /** Upper bound on a subject string fed to a regular expression. */
@@ -62,7 +63,12 @@ function compile(source: string): RegExp {
   }
 }
 
-type Predicate = (value: unknown, assertion: Assertion, evaluatedAt: number) => boolean;
+/** `__served` is the resolved `otherPath` value, attached by `evaluateAssertion`. */
+type Predicate = (
+  value: unknown,
+  assertion: Assertion & { __served?: unknown },
+  evaluatedAt: number,
+) => boolean;
 
 const OPERATORS: Record<OperatorName, Predicate> = {
   exists: (value) => value !== undefined,
@@ -109,12 +115,33 @@ const OPERATORS: Record<OperatorName, Predicate> = {
     Array.isArray(value) && value.length >= numericOperand(assertion),
 
   /**
-   * Age check against a caller-supplied instant.
+   * Freshness measured entirely inside the signed response.
    *
-   * The subject is a unix timestamp in seconds. `evaluatedAt` comes from the
-   * evidence bundle (the block timestamp of the dispute), never from the clock.
-   * A timestamp in the future fails: it is not evidence of freshness, it is
-   * evidence of a broken or dishonest clock.
+   * `path` is when the data was produced, `otherPath` is when the seller served
+   * it, and both are covered by the receipt signature — so the check needs no
+   * clock, stays deterministic, and cannot be skewed by how long a buyer waits
+   * before disputing.
+   *
+   * The residual assumption is that a seller states its own serving time
+   * honestly. Nothing on-chain can attest that; what keeps it useful is that
+   * the buyer compares it against local time on receipt and stops paying a
+   * service whose clock it cannot trust.
+   */
+  'freshness.servedWithin': (value, assertion, _evaluatedAt) => {
+    const producedAt = asNumber(value);
+    const servedAt = asNumber(assertion.__served);
+    if (producedAt === null || servedAt === null) return false;
+    const age = servedAt - producedAt;
+    return age >= 0 && age <= numericOperand(assertion);
+  },
+
+  /**
+   * Age against a caller-supplied instant.
+   *
+   * Only sound where `evaluatedAt` is a genuinely attested delivery time. The
+   * escrow has no such field, so prefer `freshness.servedWithin` on-chain.
+   * A timestamp in the future fails: that is evidence of a broken clock, not of
+   * freshness.
    */
   'freshness.maxAgeSec': (value, assertion, evaluatedAt) => {
     const asOf = asNumber(value);
@@ -129,11 +156,26 @@ export function isOperator(name: string): name is OperatorName {
 }
 
 /** Run one assertion. Throws `OperatorError` if the SLA itself is malformed. */
-export function evaluateAssertion(value: unknown, assertion: Assertion, evaluatedAt: number): boolean {
+export function evaluateAssertion(
+  value: unknown,
+  assertion: Assertion,
+  evaluatedAt: number,
+  root?: unknown,
+): boolean {
   const predicate = OPERATORS[assertion.op];
   if (predicate === undefined) {
     throw new OperatorError(`unknown operator: ${assertion.op}`);
   }
+
+  // Two-path operators need a second value out of the same response body.
+  if (assertion.op === 'freshness.servedWithin') {
+    if (assertion.otherPath === undefined) {
+      throw new OperatorError('freshness.servedWithin needs "otherPath"');
+    }
+    const served = root === undefined ? undefined : readPath(root, assertion.otherPath);
+    return predicate(value, { ...assertion, __served: served } as Assertion, evaluatedAt);
+  }
+
   return predicate(value, assertion, evaluatedAt);
 }
 

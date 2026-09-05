@@ -6,16 +6,50 @@
     "amount": "10000000",
     "network": "hedera:testnet"
   },
-  "latency": { "maxMs": 2000 },
+  "latency": {
+    "maxMs": 2000
+  },
   "response": {
     "contentType": "application/json",
-    "required": ["pair", "bid", "ask", "asOf"],
+    "required": [
+      "pair",
+      "bid",
+      "ask",
+      "asOf",
+      "servedAt"
+    ],
     "assertions": [
-      { "op": "string.matches", "path": "$.pair", "value": "[A-Z]+-[A-Z]+", "note": "well-formed pair" },
-      { "op": "numeric.gt", "path": "$.bid", "value": 0, "note": "bid is positive" },
-      { "op": "numeric.gt", "path": "$.ask", "value": 0, "note": "ask is positive" },
-      { "op": "numeric.lte", "path": "$.spreadBps", "value": 50, "note": "spread within 50bps" },
-      { "op": "freshness.maxAgeSec", "path": "$.asOf", "value": 30, "note": "quote at most 30s old" }
+      {
+        "op": "string.matches",
+        "path": "$.pair",
+        "value": "[A-Z]+-[A-Z]+",
+        "note": "well-formed pair"
+      },
+      {
+        "op": "numeric.gt",
+        "path": "$.bid",
+        "value": 0,
+        "note": "bid is positive"
+      },
+      {
+        "op": "numeric.gt",
+        "path": "$.ask",
+        "value": 0,
+        "note": "ask is positive"
+      },
+      {
+        "op": "numeric.lte",
+        "path": "$.spreadBps",
+        "value": 50,
+        "note": "spread within 50bps"
+      },
+      {
+        "op": "freshness.servedWithin",
+        "path": "$.asOf",
+        "value": 30,
+        "note": "quote at most 30s old when served",
+        "otherPath": "$.servedAt"
+      }
     ]
   }
 }
