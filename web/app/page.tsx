@@ -1,4 +1,5 @@
 import Link from 'next/link';
+import { Demo } from '@/components/demo';
 import { FlowDiagram } from '@/components/flow-diagram';
 import { Reveal } from '@/components/reveal';
 import { ESCROW, PROVEN_RUNS, RELAY } from '@/lib/constants';
@@ -9,6 +10,7 @@ export default function Home() {
     <>
       <Hero />
       <Problem />
+      <Demo />
       <Lifecycle />
       <Proof />
       <Guarantees />
@@ -50,19 +52,25 @@ function Hero() {
 
         <Reveal delay={0.24} onMount>
           <div className="mt-9 flex flex-wrap items-center gap-3">
-            <Link
-              href="/protocol"
+            <a
+              href="#demo"
               className="bg-brass text-ink hover:bg-brass-glow rounded px-5 py-2.5 text-[14px] font-500 transition-colors"
             >
-              How it works
-            </Link>
+              Run the live demo
+            </a>
             <Link
-              href="/explorer"
+              href="/protocol"
               className="border-line text-text-2 hover:border-brass-dim hover:text-text rounded border px-5 py-2.5 text-[14px] transition-colors"
             >
-              Live explorer
+              Explore the protocol
             </Link>
           </div>
+        </Reveal>
+
+        <Reveal delay={0.3} onMount>
+          <p className="text-text-3 mt-7 text-[13px]">
+            Powered by Hedera · Chainlink CRE · Bazantic
+          </p>
         </Reveal>
 
         <Reveal delay={0.34} onMount>
