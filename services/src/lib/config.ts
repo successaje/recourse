@@ -52,4 +52,11 @@ export const config = {
    * identity, not an operator credential.
    */
   sellerPrivateKey: process.env['SELLER_PRIVATE_KEY'],
+  /**
+   * Hedera account the gateway's own fees are paid to.
+   *
+   * Deliberately not the escrow: escrow deposits are earmarked for a delivery
+   * and become bindable by whoever calls `bind` next.
+   */
+  gatewayPayTo: env('GATEWAY_PAYTO', '0.0.4426240'),
 } as const;

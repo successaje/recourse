@@ -28,16 +28,22 @@ export interface PaymentRequirements {
 /**
  * What a service demands for one call.
  *
- * `payTo` is the escrow, not the seller. That single substitution is the whole
- * protocol: the money settles somewhere neither party can unilaterally take it
- * from, and everything downstream is about deciding who gets it.
+ * `payTo` defaults to the escrow rather than the seller, and that single
+ * substitution is the whole protocol: the money settles somewhere neither party
+ * can unilaterally take it from, and everything downstream is about deciding who
+ * gets it.
+ *
+ * Pass an explicit `payTo` for a service selling something *other* than an
+ * escrowed delivery — the gateway's own adjudication endpoint, for instance.
+ * Directing ordinary revenue at the escrow would deposit it as unbound balance,
+ * which the next caller to `bind` could claim against their own payment.
  */
-export function paymentRequirements(amount: string): PaymentRequirements {
+export function paymentRequirements(amount: string, payTo: string = ESCROW_ACCOUNT_ID): PaymentRequirements {
   return {
     scheme: 'exact',
     network: X402_NETWORK,
     amount,
-    payTo: ESCROW_ACCOUNT_ID,
+    payTo,
     maxTimeoutSeconds: PAYMENT_TIMEOUT_SECONDS,
     asset: X402_ASSET,
     extra: { feePayer: X402_FEE_PAYER },

@@ -7,7 +7,8 @@
     "seller": "bun run src/seller.ts",
     "index": "bun run src/index-service.ts",
     "typecheck": "tsc --noEmit",
-    "test": "bun test"
+    "test": "bun test",
+    "gateway": "bun run src/gateway.ts"
   },
   "dependencies": {
     "@recourse/sla": "file:../sla",
