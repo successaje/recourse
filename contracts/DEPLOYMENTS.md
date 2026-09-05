@@ -76,3 +76,47 @@ package root aside, at which point the same workflow runs. Chainlink's own unmod
 template fails identically, so it is not specific to this project. Removing the stray
 `~/package.json`, `~/node_modules` and `~/bun.lock` fixes it for every project on the
 machine.
+
+## First end-to-end run — 5 Sep 2026
+
+A real x402 payment, adjudicated in an enclave, with the verdict dispatched
+cross-chain. Every step below happened on live testnets.
+
+| Step | Evidence |
+| --- | --- |
+| x402 settlement into escrow | Hedera tx `0.0.7162784@1788621760.953765842` |
+| `bind` | `0x9610a95f2cbe39e1ab96176abcd9be723eb1656d362a1333d0c6bd6330079425` |
+| Seller served + signed a receipt | responseHash `0xaa47e3590af187621b06c09574ed0b01ea7da6bbed9c360e139569fb2a515bde` |
+| `dispute` | payment `0xd382d7204f3e1828052297525c441f22cd110e489d21807b69d432bd54f45dd7`, bond 1e6 tinybar |
+| Enclave verdict | `REJECT reason=102` |
+| Report written to Sepolia | [`0xd56fbd31…48bfd`](https://sepolia.etherscan.io/tx/0xd56fbd31cc0a6bb96fec8c0c4a5ba37598d9c2fd90b66f84c4f24ef6bef48bfd), 217,047 gas |
+| CCIP message | `0x9ee1905c3c96ca7cc091ed85bc333cbb3a2d0a0a1db009d964e42d6ba25f35ba` |
+| CCIP fee actually paid | 224,259,624,325,870 wei, within 0.1% of the quote |
+
+Reason 102 is `ASSERTION_OFFSET + 2` — clause 2, `numeric.gt` on `$.bid`, which is
+exactly the rule the seller broke when asked for a negative bid. The refund is
+therefore attributable to a specific published promise rather than a judgement call.
+
+**Delivery on Hedera was still pending 16 minutes after dispatch**; the payment
+remained in state 2 (Disputed). CCIP waits for source-chain finality, and Sepolia
+takes roughly two epochs, so some of that is expected. Track the message at
+[ccip.chain.link](https://ccip.chain.link) by the id above. If it lands as failed
+rather than pending, the first thing to check is the destination gas limit — the
+relay sends 300,000, and `_ccipReceive` does a state transition plus a native
+transfer to the winner.
+
+### Hedera unit trap
+
+Inside the EVM, HBAR is tinybars: `address(this).balance`, `msg.value` and
+`call{value:}` all agree, so the escrow's accounting is self-consistent. A
+transaction submitted over JSON-RPC carries `value` in **weibars**, which the relay
+divides by 10^10 before the EVM sees it. Sending a tinybar amount as a raw tx value
+underpays by ten orders of magnitude; it surfaced here as `BondTooSmall`, which
+names nothing useful. Clients must scale, contracts must not.
+
+### Relay lag
+
+Hedera's JSON-RPC relay trails consensus, so the buyer waits three times: for the
+deposit to be visible before `bind`, for the bound state before the seller will
+serve, and for the dispute receipt so the adjudicator pins its read to the block
+the dispute actually landed in.
