@@ -1,0 +1,21 @@
+{
+  "name": "@recourse/services",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "seller": "bun run src/seller.ts",
+    "index": "bun run src/index-service.ts",
+    "typecheck": "tsc --noEmit",
+    "test": "bun test"
+  },
+  "dependencies": {
+    "@recourse/sla": "file:../sla",
+    "hono": "4.6.14",
+    "viem": "2.34.0"
+  },
+  "devDependencies": {
+    "typescript": "5.9.3",
+    "@types/bun": "1.1.14"
+  }
+}
