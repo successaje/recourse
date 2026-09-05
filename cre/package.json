@@ -1,0 +1,13 @@
+{
+  "name": "recourse-cre",
+  "version": "0.1.0",
+  "private": true,
+  "type": "module",
+  "//": "Shadows the workflow's dependencies at the CRE project root. The bundler resolves from here, not from adjudicate/, so without this it walks up past the workflow's own node_modules and finds whatever viem happens to sit in an ancestor directory (there is a viem 1.18.2 at ~/ and a 2.30.1 at ~/Documents/github). A mismatched viem still compiles but produces a WASM binary that traps at engine start.",
+  "dependencies": {
+    "@chainlink/cre-sdk": "1.18.0",
+    "@recourse/sla": "file:../sla",
+    "viem": "2.34.0",
+    "zod": "3.25.76"
+  }
+}
