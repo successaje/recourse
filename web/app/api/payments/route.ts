@@ -40,6 +40,7 @@ export interface TimelineEntry {
   paidTo?: Hex;
   seller?: Hex;
   buyer?: Hex;
+  slaHash?: Hex;
 }
 
 export interface PaymentRow {
@@ -52,6 +53,7 @@ export interface PaymentRow {
   status: 'Funded' | 'Disputed' | 'Challenged' | 'Settled';
   reasonCode?: number;
   paidTo?: Hex;
+  slaHash?: Hex;
   firstSeen: number;
   lastSeen: number;
   events: EventName[];
@@ -81,11 +83,12 @@ function decodeLog(log: MirrorLog): TimelineEntry | null {
   try {
     switch (event) {
       case 'Bound': {
-        const [amount, , deadline] = decodeAbiParameters(
+        const [amount, slaHash, deadline] = decodeAbiParameters(
           parseAbiParameters('uint256, bytes32, uint64'),
           data,
         );
         entry.amount = amount.toString();
+        entry.slaHash = slaHash;
         void deadline;
         entry.buyer = topics[2] as Hex;
         entry.seller = topics[3] as Hex;
@@ -147,6 +150,7 @@ function toRows(entries: TimelineEntry[]): PaymentRow[] {
     if (entry.bond) row.bond = entry.bond;
     if (entry.buyer) row.buyer = entry.buyer;
     if (entry.seller) row.seller = entry.seller;
+    if (entry.slaHash) row.slaHash = entry.slaHash;
     if (entry.reasonCode !== undefined) row.reasonCode = entry.reasonCode;
     if (entry.paidTo) row.paidTo = entry.paidTo;
 
