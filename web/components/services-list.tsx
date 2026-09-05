@@ -66,6 +66,13 @@ export function ServicesList() {
         which means nobody can list themselves without having done the work.
       </p>
 
+      <Link
+        href="/services/new"
+        className="border-line text-text-2 hover:border-brass-dim hover:text-text mt-7 inline-block rounded border px-4 py-2.5 text-[13.5px] transition-colors"
+      >
+        Publish an SLA →
+      </Link>
+
       {error && (
         <p className="border-refund/35 text-refund mt-8 rounded border p-4 text-[13.5px]">{error}</p>
       )}
