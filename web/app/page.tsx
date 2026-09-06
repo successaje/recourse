@@ -1,6 +1,7 @@
 import Link from 'next/link';
 import { Demo } from '@/components/demo';
 import { Problem } from '@/components/problem';
+import { Sponsors, SponsorStrip } from '@/components/sponsors';
 import { FlowDiagram } from '@/components/flow-diagram';
 import { Reveal } from '@/components/reveal';
 import { ESCROW, PROVEN_RUNS, RELAY } from '@/lib/constants';
@@ -13,6 +14,7 @@ export default function Home() {
       <Problem />
       <Demo />
       <Lifecycle />
+      <Sponsors />
       <Proof />
       <Guarantees />
       <Cta />
@@ -69,9 +71,9 @@ function Hero() {
         </Reveal>
 
         <Reveal delay={0.3} onMount>
-          <p className="text-text-3 mt-7 text-[13px]">
-            Powered by Hedera · Chainlink CRE · Bazantic
-          </p>
+          <div className="mt-7">
+            <SponsorStrip />
+          </div>
         </Reveal>
 
         <Reveal delay={0.34} onMount>
