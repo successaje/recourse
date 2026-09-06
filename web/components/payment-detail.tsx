@@ -62,7 +62,7 @@ export function PaymentDetail({ paymentId }: { paymentId: string }) {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-4xl px-6 pt-16">
+      <div className="shell">
         <p className="label">Payment</p>
         <h1 className="mt-4 text-[clamp(1.6rem,3vw,2.2rem)]">Not found</h1>
         <p className="text-text-2 mt-4 text-[15px]">
@@ -80,7 +80,7 @@ export function PaymentDetail({ paymentId }: { paymentId: string }) {
 
   if (!data) {
     return (
-      <div className="mx-auto max-w-4xl px-6 pt-16">
+      <div className="shell">
         <div className="bg-surface/40 h-8 w-40 animate-pulse rounded" />
         <div className="bg-surface/40 mt-6 h-24 w-full animate-pulse rounded" />
       </div>
@@ -97,7 +97,7 @@ export function PaymentDetail({ paymentId }: { paymentId: string }) {
   const wentToEnclave = data.events.some((e) => e.name === 'DisputeOpened');
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pt-16 pb-8">
+    <div className="shell">
       <Link href="/explorer" className="text-text-3 hover:text-text text-[13.5px] transition-colors">
         ← Explorer
       </Link>

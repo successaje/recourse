@@ -10,6 +10,7 @@
  * be loud.
  */
 @theme {
+  /* Dark is the default; the light palette below overrides these tokens. */
   --color-ink: #05070a;
   --color-surface: #0b0f15;
   --color-surface-2: #111721;
@@ -37,10 +38,55 @@
   --font-mono: 'IBM Plex Mono', ui-monospace, monospace;
 }
 
+/*
+ * Light theme.
+ *
+ * Not an inversion. Brass that reads as a warm accent on near-black turns
+ * muddy and illegible on paper, and the verdict colours have to hold their
+ * meaning at a completely different contrast — a green that reads as "paid"
+ * on dark is washed out on white. Each token is picked for its own ground.
+ *
+ * The neutral keeps the same slight blue bias in both themes so the family
+ * still reads as one system rather than two designs.
+ */
+:root[data-theme='light'] {
+  --color-ink: #f7f8fa;
+  --color-surface: #ffffff;
+  --color-surface-2: #f2f4f7;
+  --color-surface-3: #e8ecf1;
+  --color-line: #d6dce4;
+  --color-line-soft: #e6eaef;
+
+  --color-text: #10151c;
+  --color-text-2: #414c5a;
+  --color-text-3: #6b7684;
+
+  --color-brass: #8a6316;
+  --color-brass-dim: #b8934a;
+  --color-brass-glow: #6d4d0d;
+
+  --color-release: #1c6b4a;
+  --color-refund: #a33729;
+  --color-enclave: #3a45a8;
+}
+
 @layer base {
   :root {
     color-scheme: dark;
   }
+
+  :root[data-theme='light'] {
+    color-scheme: light;
+  }
+
+  /*
+   * No blanket transition on theme change.
+   *
+   * `body *` would animate colour on every element on the page, which is both
+   * expensive on a long document and driven by the animation timeline — frozen
+   * in a hidden tab, so a switch made there would stay stuck mid-interpolation.
+   * An instant swap is cheaper and cannot get stuck.
+   */
 
   html {
     scroll-behavior: smooth;
@@ -173,5 +219,26 @@
 @media (prefers-reduced-motion: reduce) {
   .reveal {
     animation: none;
+  }
+}
+
+@layer utilities {
+  /*
+   * The page shell.
+   *
+   * One container for every route, so the left edge of a heading always lines
+   * up with the logo above it. Detail pages used to sit at max-w-4xl while the
+   * nav and footer sat at max-w-6xl, which put the content on a different left
+   * edge from the chrome — and a different one again depending on the page.
+   *
+   * Reading width is a separate concern, handled per-block with a ch-based
+   * max-width, so narrow text no longer means a narrow page.
+   */
+  .shell {
+    margin-inline: auto;
+    max-width: 72rem; /* matches max-w-6xl on the nav and footer */
+    padding-inline: 1.5rem;
+    padding-top: 4rem;
+    padding-bottom: 2rem;
   }
 }

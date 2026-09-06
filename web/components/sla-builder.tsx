@@ -135,7 +135,7 @@ export function SlaBuilder() {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pt-16 pb-8">
+    <div className="shell">
       <Link href="/services" className="text-text-3 hover:text-text text-[13.5px] transition-colors">
         ← Services
       </Link>

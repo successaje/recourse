@@ -74,7 +74,7 @@ export function ServiceDetail({ address }: { address: string }) {
 
   if (ready && !service) {
     return (
-      <div className="mx-auto max-w-4xl px-6 pt-16">
+      <div className="shell">
         <p className="label">Service</p>
         <h1 className="mt-4 text-[clamp(1.6rem,3vw,2.2rem)]">No record</h1>
         <p className="text-text-2 mt-4 max-w-[54ch] text-[15px] leading-relaxed">
@@ -90,7 +90,7 @@ export function ServiceDetail({ address }: { address: string }) {
 
   if (!service) {
     return (
-      <div className="mx-auto max-w-4xl px-6 pt-16">
+      <div className="shell">
         <div className="bg-surface/40 h-8 w-52 animate-pulse rounded" />
         <div className="bg-surface/40 mt-6 h-28 w-full animate-pulse rounded" />
       </div>
@@ -98,7 +98,7 @@ export function ServiceDetail({ address }: { address: string }) {
   }
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pt-16 pb-8">
+    <div className="shell">
       <Link href="/services" className="text-text-3 hover:text-text text-[13.5px] transition-colors">
         ← Services
       </Link>

@@ -77,7 +77,7 @@ export function AgentDashboard({ address }: { address: string }) {
 
   if (error) {
     return (
-      <div className="mx-auto max-w-4xl px-6 pt-16">
+      <div className="shell">
         <p className="label">Agent</p>
         <h1 className="mt-4 text-[clamp(1.6rem,3vw,2.2rem)]">Could not load</h1>
         <p className="text-text-2 mt-4 text-[15px]">{error}</p>
@@ -87,7 +87,7 @@ export function AgentDashboard({ address }: { address: string }) {
 
   if (!data) {
     return (
-      <div className="mx-auto max-w-4xl px-6 pt-16">
+      <div className="shell">
         <div className="bg-surface/40 h-8 w-40 animate-pulse rounded" />
         <div className="bg-surface/40 mt-6 h-32 w-full animate-pulse rounded" />
       </div>
@@ -98,7 +98,7 @@ export function AgentDashboard({ address }: { address: string }) {
   const protectedTotal = BigInt(data.protected);
 
   return (
-    <div className="mx-auto max-w-4xl px-6 pt-16 pb-8">
+    <div className="shell">
       <p className="label">Agent</p>
       <h1 className="mt-3 text-[clamp(1.8rem,4vw,2.4rem)] leading-tight">Buyer account</h1>
       <p className="mono text-text-3 mt-3 text-[12.5px] break-all">{data.address}</p>

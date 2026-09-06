@@ -19,8 +19,15 @@ export const metadata: Metadata = {
 
 export default function RootLayout({ children }: { children: React.ReactNode }) {
   return (
-    <html lang="en">
+    <html lang="en" suppressHydrationWarning>
       <head>
+        <script
+          // Runs before first paint. An effect would repaint a frame late,
+          // which is the flash every theme toggle is judged by.
+          dangerouslySetInnerHTML={{
+            __html: `try{var t=localStorage.getItem('recourse-theme');if(t==='light')document.documentElement.dataset.theme='light';}catch(e){}`,
+          }}
+        />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
         <link rel="preconnect" href="https://fonts.gstatic.com" crossOrigin="" />
         <link

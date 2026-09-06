@@ -3,6 +3,7 @@
 import Link from 'next/link';
 import { usePathname } from 'next/navigation';
 import { useEffect, useState } from 'react';
+import { ThemeToggle } from '@/components/theme-toggle';
 
 const LINKS = [
   { href: '/protocol', label: 'Protocol' },
@@ -54,10 +55,11 @@ export function Nav() {
             href="https://github.com/successaje/recourse"
             target="_blank"
             rel="noreferrer"
-            className="border-line text-text-2 hover:border-brass-dim hover:text-text ml-2 rounded border px-3 py-1.5 text-[13.5px] transition-colors"
+            className="border-line text-text-2 hover:border-brass-dim hover:text-text ml-2 mr-2 rounded border px-3 py-1.5 text-[13.5px] transition-colors"
           >
             GitHub
           </a>
+          <ThemeToggle />
         </div>
       </nav>
     </header>

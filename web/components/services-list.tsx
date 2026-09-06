@@ -57,7 +57,7 @@ export function ServicesList() {
   }, []);
 
   return (
-    <div className="mx-auto max-w-6xl px-6 pt-16 pb-8">
+    <div className="shell">
       <p className="label">Directory</p>
       <h1 className="mt-4 text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">Protected services</h1>
       <p className="text-text-2 mt-5 max-w-[62ch] text-[16px] leading-relaxed">
