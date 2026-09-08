@@ -24,8 +24,12 @@ export default function RootLayout({ children }: { children: React.ReactNode }) 
         <script
           // Runs before first paint. An effect would repaint a frame late,
           // which is the flash every theme toggle is judged by.
+          //
+          // A stored choice always wins. With none, the reader's OS setting
+          // decides: the design is dark-first, but a first visit on a machine
+          // set to light should not be answered with a dark page.
           dangerouslySetInnerHTML={{
-            __html: `try{var t=localStorage.getItem('recourse-theme');if(t==='light')document.documentElement.dataset.theme='light';}catch(e){}`,
+            __html: `try{var t=localStorage.getItem('recourse-theme');var l=t==='light'||(!t&&window.matchMedia&&window.matchMedia('(prefers-color-scheme: light)').matches);if(l)document.documentElement.dataset.theme='light';}catch(e){}`,
           }}
         />
         <link rel="preconnect" href="https://fonts.googleapis.com" />
