@@ -150,7 +150,9 @@ worth knowing before reading the code:
 Each holds up a different third of the system.
 
 **Hedera** — the escrow and the payment rail. Live x402 payments settled through
-Blocky402 into a contract, with real paid requests and real refunds.
+Blocky402 into a contract, with real paid requests and real refunds. The `payTo`
+is a contract, not an account, which is the whole product.
+See [`hedera/SUBMISSION.md`](hedera/SUBMISSION.md).
 
 **Chainlink** — the confidential adjudicator. A registered TEE handler processing
 sensitive payloads inside AWS Nitro, plus CCIP carrying the verdict cross-chain.
