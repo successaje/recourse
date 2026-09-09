@@ -154,6 +154,8 @@ Blocky402 into a contract, with real paid requests and real refunds.
 
 **Chainlink** — the confidential adjudicator. A registered TEE handler processing
 sensitive payloads inside AWS Nitro, plus CCIP carrying the verdict cross-chain.
+Every oracle exists to make a private fact public; this one must do the reverse.
+See [`chainlink/SUBMISSION.md`](chainlink/SUBMISSION.md).
 
 **Bazantic** — the whole thing republished as an agent-callable gateway, so any
 agent can ask "did this response honour its SLA?" without deploying anything.
