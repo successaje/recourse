@@ -182,13 +182,21 @@ gateway.post('/v1/adjudicate', async (c) => {
     return c.json({ error: 'X-PAYMENT is not valid base64 JSON' }, 400);
   }
 
+  // Gate on the facilitator's verdict, never on the HTTP status: it reports a
+  // refused payment as 200 with isValid/success false.
   const verified = await verify(payload, requirements);
-  if (!verified.ok) {
-    return c.json({ error: 'payment verification failed', detail: verified.body }, 402);
+  if (!verified.success) {
+    return c.json(
+      { error: 'payment verification failed', reason: verified.reason, detail: verified.body },
+      402,
+    );
   }
   const settled = await settle(payload, requirements);
-  if (!settled.ok) {
-    return c.json({ error: 'settlement failed', detail: settled.body }, 402);
+  if (!settled.success) {
+    return c.json(
+      { error: 'settlement failed', reason: settled.reason, detail: settled.body },
+      402,
+    );
   }
 
   const body = (await c.req.json()) as {

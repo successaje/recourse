@@ -96,7 +96,7 @@ export async function buy(options: BuyOptions) {
   };
 
   const settled = await settle(paymentPayload, requirements as never);
-  if (!settled.ok) {
+  if (!settled.success) {
     throw new Error(`settlement failed: ${JSON.stringify(settled.body)}`);
   }
   log('settled', JSON.stringify(settled.body).slice(0, 90));

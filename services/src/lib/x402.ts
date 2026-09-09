@@ -73,14 +73,67 @@ async function post(path: string, payload: unknown): Promise<FacilitatorResult> 
   return { ok: response.ok, status: response.status, body };
 }
 
+/**
+ * Did the facilitator actually do what was asked?
+ *
+ * `ok` is the HTTP status and it is not the answer. The facilitator reports a
+ * refused payment as **200** with `isValid: false`, and a transfer that failed
+ * on-chain as **200** with `success: false` — so a caller that gates on the
+ * status alone serves paid work for free. That was a live bug here: a duplicate
+ * transaction came back `success: false` and the endpoint answered anyway.
+ *
+ * Both fields are read strictly. An unrecognised body shape counts as failure,
+ * because the one thing worse than rejecting a good payment is accepting a bad
+ * one.
+ */
+function succeeded(result: { ok: boolean; body: unknown }, field: 'isValid' | 'success'): boolean {
+  if (!result.ok) return false;
+  if (typeof result.body !== 'object' || result.body === null) return false;
+  return (result.body as Record<string, unknown>)[field] === true;
+}
+
+export interface FacilitatorResult {
+  /** HTTP-level success. Necessary, and on its own never sufficient. */
+  ok: boolean;
+  status: number;
+  body: unknown;
+  /** The facilitator's own verdict on the payment. Gate on this. */
+  success: boolean;
+  /** Why it refused, when it said so. */
+  reason?: string;
+}
+
+function reasonFrom(body: unknown): string | undefined {
+  if (typeof body !== 'object' || body === null) return undefined;
+  const b = body as Record<string, unknown>;
+  const reason = b.errorMessage ?? b.errorReason ?? b.invalidReason;
+  return typeof reason === 'string' ? reason : undefined;
+}
+
 /** Check a payment payload is well-formed and funded, without moving anything. */
-export function verify(paymentPayload: unknown, requirements: PaymentRequirements) {
-  return post('/verify', { x402Version: X402_VERSION, paymentPayload, paymentRequirements: requirements });
+export async function verify(
+  paymentPayload: unknown,
+  requirements: PaymentRequirements,
+): Promise<FacilitatorResult> {
+  const result = await post('/verify', {
+    x402Version: X402_VERSION,
+    paymentPayload,
+    paymentRequirements: requirements,
+  });
+  return { ...result, success: succeeded(result, 'isValid'), reason: reasonFrom(result.body) };
 }
 
 /** Submit the transfer. Only called once verification passes. */
-export function settle(paymentPayload: unknown, requirements: PaymentRequirements) {
-  return post('/settle', { x402Version: X402_VERSION, paymentPayload, paymentRequirements: requirements });
+export async function settle(
+  paymentPayload: unknown,
+  requirements: PaymentRequirements,
+): Promise<FacilitatorResult> {
+  const result = await post('/settle', {
+    x402Version: X402_VERSION,
+    paymentPayload,
+    paymentRequirements: requirements,
+  });
+  return { ...result, success: succeeded(result, 'success'), reason: reasonFrom(result.body) };
 }
 
 /** Decode the base64 `X-PAYMENT` header into a payment payload. */
