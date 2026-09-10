@@ -1,0 +1,12 @@
+# The build only needs web/ and the sla package it links to. Everything else
+# is contracts, workflow and services — large to upload and never imported.
+contracts/lib
+contracts/out
+contracts/cache
+contracts/broadcast
+cre
+services
+bazantic
+node_modules
+**/node_modules
+.git
