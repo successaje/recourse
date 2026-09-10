@@ -1,12 +1,15 @@
-# The build only needs web/ and the sla package it links to. Everything else
-# is contracts, workflow and services — large to upload and never imported.
-contracts/lib
-contracts/out
-contracts/cache
-contracts/broadcast
-cre
-services
-bazantic
+# Only web/ and the sla package it links to are needed to build the site.
+#
+# Every pattern is root-anchored with a leading slash, and that is load-bearing:
+# a bare `services` matches any path segment with that name, which silently
+# excluded web/app/services/ and removed three routes from the build. The
+# failure surfaced far away, as typedRoutes rejecting a link to a route that no
+# longer existed.
+/contracts
+/cre
+/services
+/bazantic
+/chainlink
+/hedera
 node_modules
-**/node_modules
 .git
