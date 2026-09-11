@@ -2,6 +2,8 @@
 
 **Track:** Best Confidential Workflow
 **Workflow:** `cre/adjudicate` — a TEE handler that settles payment disputes between AI agents
+**Live:** [recourse-nine.vercel.app](https://recourse-nine.vercel.app) — see [a real adjudicated dispute](https://recourse-nine.vercel.app/payment/0xc79c411d326b9088fa8e0279fbd06ad604d4b04afb85fa595d194c0b96790991),
+where the sealed payloads are shown as withheld and the verdict reads `reason 102`
 
 ---
 

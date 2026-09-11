@@ -5,6 +5,9 @@
 An escrow and dispute layer for agentic payments, adjudicated inside a Chainlink
 CRE enclave and settled on Hedera.
 
+**Live: [recourse-nine.vercel.app](https://recourse-nine.vercel.app)** — the explorer reads Hedera
+testnet directly, so every payment and verdict on it is real rather than seeded.
+
 ---
 
 ## The gap

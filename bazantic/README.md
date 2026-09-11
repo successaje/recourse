@@ -12,6 +12,15 @@ same pairing applies either way.
 
 ## What is built
 
+The protocol's own explorer is live at
+[recourse-nine.vercel.app](https://recourse-nine.vercel.app), reading Hedera testnet directly — useful
+for seeing the payments a Recipe run produces.
+
+**The gateway itself is not hosted there.** It is a local service
+(`bun run gateway`, port 8404) because the point of this track is to deploy it
+*on Bazantic*, not on our own infrastructure. Saying otherwise would describe
+the wrong thing being built.
+
 | Piece | Where |
 | --- | --- |
 | Gateway service | `services/src/gateway.ts` — run with `bun run gateway` |

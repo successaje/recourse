@@ -2,6 +2,8 @@
 
 **Track:** AI & Agentic Payments on Hedera
 **What we built:** an escrow that lets an agent get its money back when a paid API lies to it
+**Live:** [recourse-nine.vercel.app/explorer](https://recourse-nine.vercel.app/explorer) — reads the escrow on
+Hedera testnet directly; the payments listed are the ones cited below
 
 ---
 
