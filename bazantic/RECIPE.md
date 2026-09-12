@@ -2,6 +2,7 @@
 
 **Service:** Recourse — `/v1/adjudicate`, `/v1/sla/hash`, `/v1/payments/{id}`
 **Pairs with:** any x402 seller settling on Hedera through Blocky402
+**Live gateway:** <https://recourse-lf3oh.bazgateway.com>  ·  **MCP:** `https://recourse-lf3oh.bazgateway.com/mcp`
 
 ## When to use this
 

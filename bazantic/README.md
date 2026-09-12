@@ -12,14 +12,36 @@ same pairing applies either way.
 
 ## What is built
 
-The protocol's own explorer is live at
-[recourse-nine.vercel.app](https://recourse-nine.vercel.app), reading Hedera testnet directly — useful
-for seeing the payments a Recipe run produces.
+**The gateway is live on Bazantic:** <https://recourse-lf3oh.bazgateway.com>
 
-**The gateway itself is not hosted there.** It is a local service
-(`bun run gateway`, port 8404) because the point of this track is to deploy it
-*on Bazantic*, not on our own infrastructure. Saying otherwise would describe
-the wrong thing being built.
+| | |
+| --- | --- |
+| Gateway | <https://recourse-lf3oh.bazgateway.com> |
+| Upstream | <https://recourse-nine.vercel.app/v1> |
+| OpenAPI | <https://recourse-nine.vercel.app/v1/openapi.json> |
+| MCP | `https://recourse-lf3oh.bazgateway.com/mcp` |
+| Account | successaje7@gmail.com |
+
+Bazantic generated an MCP server from the spec, so any MCP client can call
+adjudication as a tool:
+
+```bash
+claude mcp add --transport http recourse https://recourse-lf3oh.bazgateway.com/mcp
+```
+
+The protocol's own explorer is at
+[recourse-nine.vercel.app](https://recourse-nine.vercel.app), reading Hedera
+testnet directly, which is where the payments a Recipe run produces show up.
+
+### Two payment rails, deliberately
+
+Bazantic charges at its own edge in **USDC on Base** and then forwards the call.
+Our upstream charges **0.01 HBAR over x402 on Hedera** for a direct caller.
+Demanding both for one answer would bill the caller twice, so a request arriving
+with the shared gateway key skips the second charge. The key is the only
+trustworthy signal: Bazantic forwards no marker of its own, and the proxy
+headers that do arrive are client-settable. With no key configured, nothing
+bypasses payment.
 
 | Piece | Where |
 | --- | --- |
