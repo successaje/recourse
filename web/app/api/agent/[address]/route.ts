@@ -1,4 +1,5 @@
 import { createPublicClient, defineChain, http, type Hex } from 'viem';
+import { ensNames, resolveToAddress } from '@/lib/ens';
 import { ESCROW, HEDERA_RPC } from '@/lib/constants';
 import { normalizeAddress } from '@/lib/known-services';
 
@@ -37,11 +38,26 @@ interface PaymentRow {
 
 export async function GET(request: Request, ctx: { params: Promise<{ address: string }> }) {
   const { address } = await ctx.params;
-  const target = normalizeAddress(address);
 
-  if (!/^0x[0-9a-f]{40}$/.test(target)) {
-    return Response.json({ error: 'not an address' }, { status: 400 });
+  // Accept an ENS name anywhere an address is accepted. Operators think in
+  // names; the protocol only ever deals in addresses, so the name is resolved
+  // here once and everything downstream stays address-only.
+  const decoded = decodeURIComponent(address);
+  const resolved = await resolveToAddress(decoded);
+
+  if (!resolved) {
+    return Response.json(
+      {
+        error: decoded.includes('.')
+          ? `no address is registered for ${decoded}`
+          : 'not an address or ENS name',
+      },
+      { status: 400 },
+    );
   }
+
+  const target = normalizeAddress(resolved);
+  const queriedAs = decoded.includes('.') ? decoded : null;
 
   const origin = new URL(request.url).origin;
 
@@ -79,8 +95,12 @@ export async function GET(request: Request, ctx: { params: Promise<{ address: st
       }
     }
 
+    const ens = await ensNames([target, ...mine.map((r) => normalizeAddress(r.seller))]);
+
     return Response.json({
       address: target,
+      queriedAs,
+      ensNames: ens,
       balance: balance === null ? null : balance.toString(),
       payments: mine.length,
       disputes,

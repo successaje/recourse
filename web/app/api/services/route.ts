@@ -1,4 +1,5 @@
 import type { Hex } from 'viem';
+import { ensNames } from '@/lib/ens';
 import { normalizeAddress } from '@/lib/known-services';
 
 /**
@@ -93,7 +94,10 @@ export async function GET(request: Request) {
     }
 
     const services = [...bySeller.values()].sort((a, b) => b.lastSeen - a.lastSeen);
-    return Response.json({ services });
+    const ens = await ensNames(services.map((x) => x.address));
+    return Response.json({
+      services: services.map((x) => ({ ...x, ensName: ens[x.address.toLowerCase()] ?? null })),
+    });
   } catch (error) {
     return Response.json({ services: [], error: (error as Error).message }, { status: 502 });
   }

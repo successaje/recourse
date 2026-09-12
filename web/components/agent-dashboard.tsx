@@ -40,6 +40,8 @@ interface AgentData {
   spent: string;
   stillHeld: string;
   activity: Activity[];
+  ensNames?: Record<string, string>;
+  queriedAs?: string | null;
   error?: string;
 }
 
@@ -100,7 +102,9 @@ export function AgentDashboard({ address }: { address: string }) {
   return (
     <div className="shell">
       <p className="label">Agent</p>
-      <h1 className="mt-3 text-[clamp(1.8rem,4vw,2.4rem)] leading-tight">Buyer account</h1>
+      <h1 className="mt-3 text-[clamp(1.8rem,4vw,2.4rem)] leading-tight">
+        {data.ensNames?.[data.address.toLowerCase()] ?? data.queriedAs ?? 'Buyer account'}
+      </h1>
       <p className="mono text-text-3 mt-3 text-[12.5px] break-all">{data.address}</p>
 
       {/* the headline pair */}
@@ -176,7 +180,7 @@ export function AgentDashboard({ address }: { address: string }) {
                 >
                   <div className="flex flex-wrap items-center justify-between gap-3">
                     <span className="text-text text-[14px]">
-                      {service?.name ?? short(a.seller, 6, 4)}
+                      {service?.name ?? data.ensNames?.[a.seller.toLowerCase()] ?? short(a.seller, 6, 4)}
                     </span>
                     <span className="mono text-text-2 text-[13px]">
                       {a.refunded ? (

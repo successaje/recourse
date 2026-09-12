@@ -1,4 +1,5 @@
 import { createPublicClient, defineChain, http, type Hex } from 'viem';
+import { ensNames } from '@/lib/ens';
 import { ESCROW, HEDERA_RPC, MIRROR_NODE } from '@/lib/constants';
 
 /**
@@ -137,8 +138,11 @@ export async function GET(_req: Request, ctx: { params: Promise<{ id: string }> 
     const refundedToBuyer =
       paidTo && payment.buyer ? paidTo.toLowerCase().endsWith(payment.buyer.slice(2).toLowerCase()) : undefined;
 
+    const ens = await ensNames([payment.buyer, payment.seller]);
+
     return Response.json({
       paymentId: id,
+      ensNames: ens,
       buyer: payment.buyer,
       seller: payment.seller,
       amount: payment.amount.toString(),

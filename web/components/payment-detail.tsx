@@ -22,6 +22,7 @@ interface PaymentData {
   reasonCode?: number;
   refundedToBuyer?: boolean;
   events: { name: string; timestamp: number; reasonCode?: number }[];
+  ensNames?: Record<string, string>;
   error?: string;
 }
 
@@ -120,8 +121,18 @@ export function PaymentDetail({ paymentId }: { paymentId: string }) {
 
       {/* parties */}
       <div className="border-line mt-10 grid gap-px overflow-hidden rounded-lg border sm:grid-cols-2">
-        <Party label="Buyer" address={data.buyer} note={state === 'refunded' ? 'refunded' : undefined} />
-        <Party label="Seller" address={data.seller} note={state === 'released' ? 'paid' : undefined} />
+        <Party
+          label="Buyer"
+          address={data.buyer}
+          ensName={data.ensNames?.[data.buyer.toLowerCase()]}
+          note={state === 'refunded' ? 'refunded' : undefined}
+        />
+        <Party
+          label="Seller"
+          address={data.seller}
+          ensName={data.ensNames?.[data.seller.toLowerCase()]}
+          note={state === 'released' ? 'paid' : undefined}
+        />
       </div>
 
       {/* facts */}
@@ -216,11 +227,24 @@ export function PaymentDetail({ paymentId }: { paymentId: string }) {
   );
 }
 
-function Party({ label, address, note }: { label: string; address: string; note?: string }) {
+function Party({
+  label,
+  address,
+  ensName,
+  note,
+}: {
+  label: string;
+  address: string;
+  ensName?: string | undefined;
+  note?: string;
+}) {
   return (
     <div className="bg-surface/40 p-6">
       <p className="label">{label}</p>
-      <p className="mono text-text mt-2 text-[13px] break-all">{address}</p>
+      {ensName && <p className="text-text mt-2 text-[15px]">{ensName}</p>}
+      <p className={`mono break-all ${ensName ? 'text-text-3 mt-1 text-[12px]' : 'text-text mt-2 text-[13px]'}`}>
+        {address}
+      </p>
       {note && <p className="text-brass mt-1.5 text-[12.5px]">{note}</p>}
     </div>
   );
