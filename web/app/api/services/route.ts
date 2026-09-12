@@ -42,7 +42,7 @@ interface PaymentRow {
   paidTo?: string;
   firstSeen: number;
   lastSeen: number;
-  events: string[];
+  events: { name: string; at: number }[];
 }
 
 export async function GET(request: Request) {
@@ -79,7 +79,7 @@ export async function GET(request: Request) {
       entry.lastSeen = Math.max(entry.lastSeen, row.lastSeen);
 
       if (row.slaHash && !entry.slaHashes.includes(row.slaHash)) entry.slaHashes.push(row.slaHash);
-      if (row.events.includes('DisputeOpened')) entry.everDisputed += 1;
+      if (row.events.some((e) => e.name === 'DisputeOpened')) entry.everDisputed += 1;
       if (row.status === 'Disputed') entry.openDisputes += 1;
 
       if (row.status === 'Settled') {

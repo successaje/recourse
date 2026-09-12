@@ -182,8 +182,9 @@ export function PaymentDetail({ paymentId }: { paymentId: string }) {
           <div className="border-enclave/40 bg-enclave/5 mt-4 rounded-lg border border-dashed p-6">
             <p className="text-text text-[15px]">Chainlink CRE · AWS Nitro enclave</p>
             <p className="text-text-2 mt-2 text-[14px] leading-relaxed">
-              The disputed payload was evaluated inside a confidential workflow. It never
-              went on-chain and no node operator saw it.
+              The disputed payload was evaluated inside a confidential workflow. It was
+              never published on-chain and stayed confidential from the workflow
+              operators.
             </p>
 
             <dl className="mt-5 space-y-2 text-[13px]">

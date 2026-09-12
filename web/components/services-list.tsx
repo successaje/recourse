@@ -59,7 +59,7 @@ export function ServicesList() {
   return (
     <div className="shell">
       <p className="label">Directory</p>
-      <h1 className="mt-4 text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">Protected services</h1>
+      <h1 className="mt-4 text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">Services observed on Recourse</h1>
       <p className="text-text-2 mt-5 max-w-[62ch] text-[16px] leading-relaxed">
         Every service that has taken a payment through the escrow. There is no registry
         contract and nothing to sign up for — an address appears here because it was paid,

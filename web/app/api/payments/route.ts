@@ -56,7 +56,15 @@ export interface PaymentRow {
   slaHash?: Hex;
   firstSeen: number;
   lastSeen: number;
-  events: EventName[];
+  /**
+   * Each event with the consensus timestamp it actually happened at.
+   *
+   * Previously just the names, which forced every consumer to reuse the
+   * payment's `lastSeen` for all of them — so a Bound, a DisputeOpened and a
+   * Settled minutes apart all rendered as the same moment. An activity feed
+   * that invents its own history is worse than no feed.
+   */
+  events: { name: EventName; at: number }[];
 }
 
 interface MirrorLog {
@@ -145,7 +153,7 @@ function toRows(entries: TimelineEntry[]): PaymentRow[] {
     };
 
     row.lastSeen = entry.timestamp;
-    row.events.push(entry.event);
+    row.events.push({ name: entry.event, at: entry.timestamp });
     if (entry.amount && entry.event === 'Bound') row.amount = entry.amount;
     if (entry.bond) row.bond = entry.bond;
     if (entry.buyer) row.buyer = entry.buyer;

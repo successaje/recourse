@@ -1,5 +1,7 @@
 'use client';
 
+import { useRouter } from 'next/navigation';
+
 import Link from 'next/link';
 import { useEffect, useState } from 'react';
 import type { PaymentRow } from '@/app/api/payments/route';
@@ -58,6 +60,8 @@ function stateOf(row: PaymentRow) {
 
 export function Explorer() {
   const [tab, setTab] = useState<Tab>('payments');
+  const router = useRouter();
+  const [query, setQuery] = useState('');
   const [rows, setRows] = useState<PaymentRow[] | null>(null);
   const [services, setServices] = useState<ServiceRow[]>([]);
   const [error, setError] = useState<string | null>(null);
@@ -85,7 +89,7 @@ export function Explorer() {
     };
   }, []);
 
-  const disputes = (rows ?? []).filter((r) => r.events.includes('DisputeOpened'));
+  const disputes = (rows ?? []).filter((r) => r.events.some((e) => e.name === 'DisputeOpened'));
   const activity = buildActivity(rows ?? []);
 
   const totals = (rows ?? []).reduce(
@@ -111,10 +115,37 @@ export function Explorer() {
       <p className="label">Live · Hedera testnet</p>
       <h1 className="mt-4 text-[clamp(1.8rem,4vw,2.5rem)] leading-tight">Explorer</h1>
       <p className="text-text-2 mt-4 max-w-[62ch] text-[16px] leading-relaxed">
-        Every payment the escrow has held, assembled from its own events. A row moves from
+        Payments the escrow has held, assembled from its own events. A row moves from
         protected to released or refunded as the protocol runs, and a refunded payment
         names the clause that failed rather than reporting a bare error.
       </p>
+
+      {/* Paste a payment id, an address or an ENS name. An explorer you cannot
+          look anything up in is a dashboard. */}
+      <form
+        className="mt-7 flex max-w-[62ch] gap-2"
+        onSubmit={(e) => {
+          e.preventDefault();
+          const q = query.trim();
+          if (!q) return;
+          if (/^0x[0-9a-fA-F]{64}$/.test(q)) router.push(`/payment/${q}`);
+          else router.push(`/agent?address=${encodeURIComponent(q)}`);
+        }}
+      >
+        <input
+          value={query}
+          onChange={(e) => setQuery(e.target.value)}
+          placeholder="Payment id, address, or name.eth"
+          aria-label="Search payments and accounts"
+          className="border-line bg-surface/40 focus:border-brass-dim mono flex-1 rounded border px-3 py-2.5 text-[13px] outline-none"
+        />
+        <button
+          type="submit"
+          className="border-line text-text-2 hover:border-brass-dim hover:text-text rounded border px-4 py-2.5 text-[13.5px] transition-colors"
+        >
+          Look up
+        </button>
+      </form>
 
       {/* headline totals */}
       <dl className="border-line mt-8 grid gap-px overflow-hidden rounded-lg border sm:grid-cols-4">
@@ -207,13 +238,16 @@ function buildActivity(rows: PaymentRow[]) {
     Settled: 'Funds left the escrow',
   };
 
+  // Each event carries the consensus timestamp it happened at. Reusing the
+  // payment's last-seen time for all of them made a feed that looked live and
+  // was not, which is worse than showing nothing.
   return rows
     .flatMap((r) =>
       r.events.map((e) => ({
         paymentId: r.paymentId,
-        event: e,
-        copy: COPY[e] ?? e,
-        timestamp: r.lastSeen,
+        event: e.name,
+        copy: COPY[e.name] ?? e.name,
+        timestamp: e.at,
       })),
     )
     .sort((a, b) => b.timestamp - a.timestamp);

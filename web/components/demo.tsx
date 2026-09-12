@@ -42,7 +42,7 @@ export function Demo() {
                   r.id === 'dispute' ? 'text-refund' : 'text-text-2'
                 }`}
               >
-                {r.id === 'dispute' ? 'Run the dispute' : 'Run the honest payment'}
+                {r.id === 'dispute' ? 'Replay the dispute' : 'Replay the honest payment'}
                 <span className="transition-transform group-hover:translate-x-0.5">→</span>
               </span>
             </button>
@@ -254,9 +254,9 @@ function Outcome({ run }: { run: DemoRun }) {
       <div className="mt-6 flex flex-wrap gap-3">
         <Link
           href={`/payment/${run.paymentId}`}
-          className="border-line text-text-2 hover:border-brass-dim hover:text-text rounded border px-4 py-2 text-[13.5px] transition-colors"
+          className="bg-brass text-ink hover:bg-brass-glow rounded px-4 py-2 text-[13.5px] transition-colors"
         >
-          Open this payment
+          Verify this payment live
         </Link>
         <Link
           href="/explorer"

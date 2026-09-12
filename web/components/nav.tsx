@@ -16,6 +16,7 @@ const LINKS = [
 export function Nav() {
   const pathname = usePathname();
   const [scrolled, setScrolled] = useState(false);
+  const [open, setOpen] = useState(false);
 
   useEffect(() => {
     const onScroll = () => setScrolled(window.scrollY > 8);
@@ -23,6 +24,12 @@ export function Nav() {
     window.addEventListener('scroll', onScroll, { passive: true });
     return () => window.removeEventListener('scroll', onScroll);
   }, []);
+
+  // Close on navigation, so tapping a link does not leave the sheet open over
+  // the page it just went to.
+  useEffect(() => {
+    setOpen(false);
+  }, [pathname]);
 
   return (
     <header
@@ -36,7 +43,10 @@ export function Nav() {
           <span className="font-display text-[15px] font-600 tracking-tight">Recourse</span>
         </Link>
 
-        <div className="flex items-center gap-1">
+        {/* Five links, a button and a toggle do not fit a phone. Below md the
+            links collapse into a sheet and only the mark, the toggle and the
+            menu button stay on the bar. */}
+        <div className="hidden items-center gap-1 md:flex">
           {LINKS.map((link) => {
             const active = pathname.startsWith(link.href);
             return (
@@ -61,7 +71,55 @@ export function Nav() {
           </a>
           <ThemeToggle />
         </div>
+
+        <div className="flex items-center gap-2 md:hidden">
+          <ThemeToggle />
+          <button
+            onClick={() => setOpen((v) => !v)}
+            aria-expanded={open}
+            aria-controls="mobile-nav"
+            aria-label={open ? 'Close menu' : 'Open menu'}
+            className="border-line text-text-2 hover:border-brass-dim hover:text-text flex h-8 w-8 items-center justify-center rounded border transition-colors"
+          >
+            <svg width="14" height="14" viewBox="0 0 16 16" fill="none" aria-hidden>
+              {open ? (
+                <path d="M3 3l10 10M13 3L3 13" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              ) : (
+                <path d="M2 4h12M2 8h12M2 12h12" stroke="currentColor" strokeWidth="1.5" strokeLinecap="round" />
+              )}
+            </svg>
+          </button>
+        </div>
       </nav>
+
+      {open && (
+        <div id="mobile-nav" className="border-line bg-ink/95 border-t backdrop-blur-md md:hidden">
+          <div className="mx-auto flex max-w-6xl flex-col px-6 py-3">
+            {LINKS.map((link) => {
+              const active = pathname.startsWith(link.href);
+              return (
+                <Link
+                  key={link.href}
+                  href={link.href}
+                  className={`border-line-soft border-b py-3 text-[15px] transition-colors last:border-0 ${
+                    active ? 'text-brass' : 'text-text-2'
+                  }`}
+                >
+                  {link.label}
+                </Link>
+              );
+            })}
+            <a
+              href="https://github.com/successaje/recourse"
+              target="_blank"
+              rel="noreferrer"
+              className="text-text-3 py-3 text-[15px]"
+            >
+              GitHub ↗
+            </a>
+          </div>
+        </div>
+      )}
     </header>
   );
 }

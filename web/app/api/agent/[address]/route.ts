@@ -33,7 +33,7 @@ interface PaymentRow {
   reasonCode?: number;
   paidTo?: string;
   lastSeen: number;
-  events: string[];
+  events: { name: string; at: number }[];
 }
 
 export async function GET(request: Request, ctx: { params: Promise<{ address: string }> }) {
@@ -82,7 +82,7 @@ export async function GET(request: Request, ctx: { params: Promise<{ address: st
       const bond = BigInt(row.bond ?? '0');
       protectedTotal += amount;
 
-      if (row.events.includes('DisputeOpened')) disputes += 1;
+      if (row.events.some((e) => e.name === 'DisputeOpened')) disputes += 1;
       if (row.status === 'Disputed') openDisputes += 1;
 
       if (row.status === 'Settled') {

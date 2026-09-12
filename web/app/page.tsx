@@ -59,7 +59,7 @@ function Hero() {
               href="#demo"
               className="bg-brass text-ink hover:bg-brass-glow rounded px-5 py-2.5 text-[14px] font-500 transition-colors"
             >
-              Run the live demo
+              Replay the verified dispute
             </a>
             <Link
               href="/protocol"
@@ -110,7 +110,7 @@ const STEPS = [
   {
     n: '05',
     title: 'The verdict settles itself',
-    body: 'Only the payment id, outcome and reason code leave the enclave. CCIP carries them to Hedera, where the escrow pays the winner. No operator sits anywhere in that path.',
+    body: 'Only the payment id, outcome and reason code leave the enclave. CCIP carries them to Hedera, where the escrow pays the winner. Once adjudication starts, the attested verdict and the settlement run without either party controlling the outcome.',
   },
 ];
 
