@@ -177,44 +177,75 @@ gateway.get('/v1/payments/:paymentId', async (c) => {
  * a two-transaction escrow around a one-call verdict would cost more than the
  * verdict.
  */
+/**
+ * Was this call already paid for upstream?
+ *
+ * A reseller gateway (Bazantic) charges at its own edge in its own currency and
+ * then forwards the request here. Demanding x402 again would bill the caller
+ * twice for one answer, so a request carrying the shared key skips the payment
+ * step. The key is the only trustworthy signal: the forwarded proxy headers are
+ * client-settable and prove nothing.
+ *
+ * Absent `GATEWAY_API_KEY`, nothing can bypass payment. A missing secret must
+ * fail closed, never open.
+ */
+function isPrepaid(presented: string | undefined): boolean {
+  const expected = process.env['GATEWAY_API_KEY'];
+  if (!expected || !presented) return false;
+  if (expected.length !== presented.length) return false;
+  // Constant time: a length-safe compare that does not return early on the
+  // first differing byte.
+  let diff = 0;
+  for (let i = 0; i < expected.length; i++) diff |= expected.charCodeAt(i) ^ presented.charCodeAt(i);
+  return diff === 0;
+}
+
 gateway.post('/v1/adjudicate', async (c) => {
   // Paid to the gateway itself, never to the escrow.
+  const prepaid = isPrepaid(c.req.header('x-api-key'));
   const requirements = paymentRequirements(ADJUDICATION_PRICE, config.gatewayPayTo);
-  const header = c.req.header('X-PAYMENT');
 
-  if (!header) {
-    return c.json(
-      {
-        x402Version: X402_VERSION,
-        accepts: [requirements],
-        error: 'payment required',
-      },
-      402,
-    );
-  }
+  // Settlement detail, for the response. A prepaid call has none of its own:
+  // the money moved at the reseller's edge, on its own rail.
+  let settlement: unknown = { prepaid: true, via: 'gateway api key' };
 
-  let payload: unknown;
-  try {
-    payload = decodePaymentHeader(header);
-  } catch {
-    return c.json({ error: 'X-PAYMENT is not valid base64 JSON' }, 400);
-  }
+  if (!prepaid) {
+    const header = c.req.header('X-PAYMENT');
+    if (!header) {
+      return c.json(
+        {
+          x402Version: X402_VERSION,
+          accepts: [requirements],
+          error: 'payment required',
+        },
+        402,
+      );
+    }
 
-  // Gate on the facilitator's verdict, never on the HTTP status: it reports a
-  // refused payment as 200 with isValid/success false.
-  const verified = await verify(payload, requirements);
-  if (!verified.success) {
-    return c.json(
-      { error: 'payment verification failed', reason: verified.reason, detail: verified.body },
-      402,
-    );
-  }
-  const settled = await settle(payload, requirements);
-  if (!settled.success) {
-    return c.json(
-      { error: 'settlement failed', reason: settled.reason, detail: settled.body },
-      402,
-    );
+    let payload: unknown;
+    try {
+      payload = decodePaymentHeader(header);
+    } catch {
+      return c.json({ error: 'X-PAYMENT is not valid base64 JSON' }, 400);
+    }
+
+    // Gate on the facilitator's verdict, never on the HTTP status: it reports a
+    // refused payment as 200 with isValid/success false.
+    const verified = await verify(payload, requirements);
+    if (!verified.success) {
+      return c.json(
+        { error: 'payment verification failed', reason: verified.reason, detail: verified.body },
+        402,
+      );
+    }
+    const settled = await settle(payload, requirements);
+    if (!settled.success) {
+      return c.json(
+        { error: 'settlement failed', reason: settled.reason, detail: settled.body },
+        402,
+      );
+    }
+    settlement = settled.body;
   }
 
   const body = (await c.req.json()) as {
@@ -251,7 +282,7 @@ gateway.post('/v1/adjudicate', async (c) => {
     structural: judgement.reasonCode >= 1000 ? reasonName(judgement.reasonCode) : null,
     detail: judgement.detail,
     slaHash: canonicalHash(body.sla),
-    x402Settlement: settled.body,
+    x402Settlement: settlement,
   });
 });
 
