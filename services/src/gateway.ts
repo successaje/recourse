@@ -48,7 +48,7 @@ const OPENAPI = {
       'inputs always produce the same verdict, and the same code runs inside a ' +
       'Chainlink CRE enclave when a dispute goes on-chain.',
   },
-  servers: [{ url: 'https://recourse.example/v1' }],
+  servers: [{ url: 'https://recourse-nine.vercel.app/v1' }],
   paths: {
     '/adjudicate': {
       post: {
@@ -240,13 +240,4 @@ gateway.post('/v1/adjudicate', async (c) => {
 function reasonName(code: number): string {
   const found = Object.entries(Reason).find(([, v]) => v === code);
   return found?.[0] ?? 'UNKNOWN';
-}
-
-if (import.meta.main) {
-  const port = Number(process.env['GATEWAY_PORT'] ?? '8404');
-  console.log(`recourse gateway listening on :${port}`);
-  console.log(`  openapi: http://localhost:${port}/v1/openapi.json`);
-  console.log(`  escrow:  ${ESCROW_EVM_ADDRESS} (${ESCROW_ACCOUNT_ID})`);
-  void config;
-  Bun.serve({ port, fetch: gateway.fetch });
 }

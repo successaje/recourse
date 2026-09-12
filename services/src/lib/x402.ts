@@ -50,13 +50,14 @@ export function paymentRequirements(amount: string, payTo: string = ESCROW_ACCOU
   };
 }
 
-interface FacilitatorResult {
+/** What the HTTP call itself returned, before interpreting the body. */
+interface HttpResult {
   ok: boolean;
   status: number;
   body: unknown;
 }
 
-async function post(path: string, payload: unknown): Promise<FacilitatorResult> {
+async function post(path: string, payload: unknown): Promise<HttpResult> {
   const response = await fetch(`${FACILITATOR_URL}${path}`, {
     method: 'POST',
     headers: { 'Content-Type': 'application/json' },
@@ -92,15 +93,17 @@ function succeeded(result: { ok: boolean; body: unknown }, field: 'isValid' | 's
   return (result.body as Record<string, unknown>)[field] === true;
 }
 
-export interface FacilitatorResult {
-  /** HTTP-level success. Necessary, and on its own never sufficient. */
-  ok: boolean;
-  status: number;
-  body: unknown;
+export interface FacilitatorResult extends HttpResult {
   /** The facilitator's own verdict on the payment. Gate on this. */
   success: boolean;
-  /** Why it refused, when it said so. */
-  reason?: string;
+  /**
+   * Why it refused, when it said so.
+   *
+   * Explicitly `| undefined` because `exactOptionalPropertyTypes` is on: the
+   * field is always set, and set to undefined when the facilitator gave no
+   * reason, rather than being left off the object.
+   */
+  reason?: string | undefined;
 }
 
 function reasonFrom(body: unknown): string | undefined {

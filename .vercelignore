@@ -1,4 +1,4 @@
-# Only web/ and the sla package it links to are needed to build the site.
+# Only web/ and the two packages it links to are needed to build the site.
 #
 # Every pattern is root-anchored with a leading slash, and that is load-bearing:
 # a bare `services` matches any path segment with that name, which silently
@@ -7,7 +7,6 @@
 # longer existed.
 /contracts
 /cre
-/services
 /bazantic
 /chainlink
 /hedera

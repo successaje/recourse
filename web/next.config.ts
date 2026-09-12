@@ -11,7 +11,7 @@ const config: NextConfig = {
   // tsc do that mapping already; webpack needs telling. Importing the package
   // rather than copying it keeps one implementation of the canonical hash —
   // two copies that drift is exactly the failure the hash exists to prevent.
-  transpilePackages: ['@recourse/sla'],
+  transpilePackages: ['@recourse/sla', '@recourse/services'],
   webpack: (cfg) => {
     cfg.resolve.extensionAlias = {
       ...cfg.resolve.extensionAlias,
