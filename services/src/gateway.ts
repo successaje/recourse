@@ -110,7 +110,25 @@ const OPENAPI = {
 
 gateway.get('/v1/openapi.json', (c) => c.json(OPENAPI));
 
-gateway.get('/v1/health', (c) =>
+/**
+ * Service descriptor at the base URL.
+ *
+ * A gateway registry probes the base URL to check the connection, and answering
+ * 404 there tells it nothing. Both verbs are accepted because a probe may POST
+ * a body to name an operation, and refusing that would fail a connection test
+ * over a detail that says nothing about whether the service works.
+ */
+const descriptor = {
+  name: 'Recourse',
+  description: 'Adjudicate whether a paid API response honoured the SLA it was sold under.',
+  openapi: '/v1/openapi.json',
+  endpoints: ['/v1/adjudicate', '/v1/sla/hash', '/v1/payments/{paymentId}'],
+  payment: { protocol: 'x402', version: X402_VERSION, network: 'hedera:testnet' },
+};
+gateway.all('/v1', (c) => c.json(descriptor));
+gateway.all('/v1/', (c) => c.json(descriptor));
+
+gateway.all('/v1/health', (c) =>
   c.json({ ok: true, escrow: ESCROW_EVM_ADDRESS, escrowAccount: ESCROW_ACCOUNT_ID }),
 );
 
