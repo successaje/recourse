@@ -1,0 +1,95 @@
+<!doctype html>
+<html lang="en">
+<head>
+<meta charset="utf-8">
+<link rel="preconnect" href="https://fonts.googleapis.com">
+<link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
+<link rel="stylesheet" href="https://fonts.googleapis.com/css2?family=IBM+Plex+Mono:wght@400;500&family=IBM+Plex+Sans:wght@400;500&family=IBM+Plex+Serif:wght@600&display=swap">
+<style>
+  /* Authored at exactly 640x360 and captured at 2x, so the submission gets a
+     crisp 1280x720 without any resampling. */
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+  html, body { width: 640px; height: 360px; overflow: hidden; }
+  body {
+    background: #05070a;
+    color: #e8edf4;
+    font-family: 'IBM Plex Sans', sans-serif;
+    position: relative;
+    padding: 38px 44px;
+    display: flex;
+    flex-direction: column;
+    justify-content: space-between;
+  }
+  /* The same ledger gridlines the site uses, fading out at the edges. */
+  .grid {
+    position: absolute; inset: 0;
+    background-image: linear-gradient(to right, #161d27 1px, transparent 1px);
+    background-size: 64px 100%;
+    -webkit-mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+    mask-image: linear-gradient(to bottom, transparent, #000 18%, #000 82%, transparent);
+  }
+  .row { position: relative; display: flex; align-items: center; gap: 9px; }
+  .wordmark { font-family: 'IBM Plex Serif', serif; font-weight: 600; font-size: 17px; letter-spacing: -0.01em; }
+
+  h1 {
+    position: relative;
+    font-family: 'IBM Plex Serif', serif;
+    font-weight: 600;
+    font-size: 33px;
+    line-height: 1.12;
+    letter-spacing: -0.023em;
+  }
+  h1 .brass { color: #c9973f; }
+
+  .sub {
+    position: relative;
+    margin-top: 13px;
+    font-size: 13px;
+    line-height: 1.5;
+    color: #a3b0c0;
+    max-width: 46ch;
+  }
+
+  .foot { position: relative; display: flex; align-items: baseline; justify-content: space-between; gap: 18px; }
+  /* Both halves must stay on one line: at 640px wide there is no room for a
+     wrap, and wrapping put the proof string through the sponsor list. */
+  .powered { display: flex; align-items: baseline; gap: 9px; font-size: 10.5px; color: #6b7889; white-space: nowrap; }
+  .powered b { color: #a3b0c0; font-weight: 400; }
+  .proof {
+    font-family: 'IBM Plex Mono', monospace;
+    white-space: nowrap;
+    font-size: 10px;
+    color: #6b7889;
+    letter-spacing: 0.02em;
+  }
+  .proof .r { color: #d4695c; }
+</style>
+</head>
+<body>
+  <div class="grid"></div>
+
+  <div class="row">
+    <svg width="19" height="19" viewBox="0 0 20 20" fill="none">
+      <circle cx="10" cy="10" r="8.25" stroke="#c9973f" stroke-width="1.5"/>
+      <path d="M10 1.75 A8.25 8.25 0 0 1 18.25 10 L10 10 Z" fill="#c9973f" fill-opacity="0.9"/>
+    </svg>
+    <span class="wordmark">Recourse</span>
+  </div>
+
+  <div>
+    <h1>x402 pays before delivery.<br><span class="brass">Recourse gets the money back.</span></h1>
+    <p class="sub">
+      Escrow and dispute resolution for agentic payments. Machine-checkable SLAs,
+      adjudicated inside a confidential enclave, settled on Hedera.
+    </p>
+  </div>
+
+  <div class="foot">
+    <div class="powered">
+      <span>Powered by</span>
+      <b>Hedera</b><span>·</span><b>Chainlink CRE</b><span>·</span><b>Bazantic</b>
+    </div>
+    <div class="proof">reason 102 · refunded <span class="r">+0.11 ℏ</span></div>
+  </div>
+</body>
+</html>

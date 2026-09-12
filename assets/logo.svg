@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="512" height="512" viewBox="0 0 512 512">
+  <!-- The mark is the mechanism: a full circle is the payment, the filled wedge
+       is the part held back. Escrow in one glyph. -->
+  <rect width="512" height="512" fill="#05070a"/>
+  <g transform="translate(256 256) scale(19.2) translate(-10 -10)">
+    <circle cx="10" cy="10" r="8.25" fill="none" stroke="#c9973f" stroke-width="1.15"/>
+    <path d="M10 1.75 A8.25 8.25 0 0 1 18.25 10 L10 10 Z" fill="#c9973f" fill-opacity="0.92"/>
+  </g>
+</svg>

@@ -31,6 +31,15 @@ bun run gateway                                        # :8404
 SP=/private/tmp/claude-501/.../scratchpad/recourse_run
 rsync -a --exclude node_modules --exclude bun.lock ~/Documents/github/recourse/cre/ "$SP/cre/"
 rsync -a --exclude node_modules --exclude bun.lock ~/Documents/github/recourse/sla/ "$SP/sla/"
+
+# 3. Install BOTH copies. The sla one is easy to forget and the failure is
+#    confusing: the adjudicator aborts at typecheck with "Cannot find module
+#    'viem'" pointing at ../../sla/src/canonical.ts, because the synced package
+#    has no node_modules of its own.
+printf 'registry=https://registry.npmjs.org/\n' > "$SP/cre/.npmrc"
+printf 'registry=https://registry.npmjs.org/\n' > "$SP/sla/.npmrc"
+(cd "$SP/cre" && bun install --cwd ./adjudicate)
+(cd "$SP/sla" && bun install)
 ```
 
 Check before recording:
