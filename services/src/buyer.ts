@@ -22,7 +22,7 @@ import { ExactHederaScheme, createClientHederaSigner, PrivateKey } from '@x402/h
 import type { Address, Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 
-import { config, X402_VERSION } from './lib/config.js';
+import { config, X402_VERSION, normalizePrivateKey } from './lib/config.js';
 import { bind, dispute, PaymentState, readPayment, requiredBond } from './lib/escrow.js';
 import { settle } from './lib/x402.js';
 
@@ -264,7 +264,7 @@ if (import.meta.main) {
   const result = await buy({
     sellerUrl: process.env['SELLER_URL'] ?? `http://localhost:${config.sellerPort}`,
     indexUrl: process.env['INDEX_URL'] ?? config.indexBaseUrl,
-    buyerKey,
+    buyerKey: normalizePrivateKey(buyerKey, 'BUYER_PRIVATE_KEY'),
     hederaAccountId: accountId,
     windowSeconds,
     ...(misbehave ? { misbehave } : {}),

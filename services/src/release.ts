@@ -9,13 +9,13 @@
 
 import type { Hex } from 'viem';
 
-import { ESCROW_EVM_ADDRESS } from './lib/config.js';
+import { ESCROW_EVM_ADDRESS, normalizePrivateKey } from './lib/config.js';
 import { PaymentState, publicClient, readPayment, release } from './lib/escrow.js';
 
 const paymentId = process.argv[2] as Hex | undefined;
-const key = process.env['BUYER_PRIVATE_KEY'] as Hex | undefined;
+const rawKey = process.env['BUYER_PRIVATE_KEY'];
 
-if (!paymentId || !key) {
+if (!paymentId || !rawKey) {
   console.error('usage: BUYER_PRIVATE_KEY=0x… bun run src/release.ts <paymentId>');
   process.exit(1);
 }
@@ -40,7 +40,7 @@ for (;;) {
   await new Promise((r) => setTimeout(r, Math.min(remaining, 20) * 1000));
 }
 
-const tx = await release(key, paymentId);
+const tx = await release(normalizePrivateKey(rawKey, 'BUYER_PRIVATE_KEY'), paymentId);
 const receipt = await publicClient.waitForTransactionReceipt({ hash: tx });
 console.log(`released: ${tx} (block ${receipt.blockNumber})`);
 

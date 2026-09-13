@@ -20,7 +20,7 @@ import { Hono } from 'hono';
 import { keccak256, toBytes, type Hex } from 'viem';
 import { privateKeyToAccount } from 'viem/accounts';
 
-import { config, ESCROW_ACCOUNT_ID, X402_VERSION } from './lib/config.js';
+import { config, ESCROW_ACCOUNT_ID, X402_VERSION, normalizePrivateKey } from './lib/config.js';
 import { readPayment, PaymentState } from './lib/escrow.js';
 import { signReceipt } from './lib/receipt.js';
 import { paymentRequirements } from './lib/x402.js';
@@ -98,8 +98,9 @@ function quoteBody(pair: string, misbehave: Misbehaviour | undefined, now: numbe
  * still two distinct payments.
  */
 function sellerAddress(): string {
-	if (config.sellerPrivateKey === undefined) throw new Error('SELLER_PRIVATE_KEY not set');
-	return privateKeyToAccount(config.sellerPrivateKey as Hex).address;
+	return privateKeyToAccount(
+		normalizePrivateKey(config.sellerPrivateKey, 'SELLER_PRIVATE_KEY'),
+	).address;
 }
 
 function newPaymentId(): Hex {

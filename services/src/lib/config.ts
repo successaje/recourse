@@ -60,3 +60,26 @@ export const config = {
    */
   gatewayPayTo: env('GATEWAY_PAYTO', '0.0.4426240'),
 } as const;
+
+/**
+ * Accept a private key with or without the `0x` prefix.
+ *
+ * Keys get copied between a CRE `.env`, a shell export and a command line, and
+ * they do not all agree on the prefix. Without this, a 64-character key reaches
+ * viem and fails deep inside @noble/curves with "expected ui8a of size 32, got
+ * string", which says nothing about what is actually wrong. Normalising here
+ * costs nothing and turns a stack trace into a sentence.
+ */
+export function normalizePrivateKey(raw: string | undefined, name: string): `0x${string}` {
+  const key = raw?.trim();
+  if (!key) throw new Error(`${name} is not set`);
+
+  const hex = key.startsWith('0x') ? key.slice(2) : key;
+  if (!/^[0-9a-fA-F]{64}$/.test(hex)) {
+    throw new Error(
+      `${name} is not a 32-byte hex key (got ${hex.length} hex characters). ` +
+        'It should be 64 hex characters, with or without a 0x prefix.',
+    );
+  }
+  return `0x${hex}`;
+}
